@@ -10,9 +10,9 @@ import random
 from autoit import *
 import autoit as ai
 import time
-import tkinter
-import tkinter.messagebox
-from Telnet_SSH.telnet_library_for_RF import *
+import Tkinter
+#import Tkinter.messagebox
+#from Telnet_SSH.telnet_library_for_RF import *
 logger.initLogger()
 
 #init RobotFramework
@@ -45,9 +45,6 @@ def generate_random_port(arg):
 		return str2
 
 def get_comeback_message():
-	u'''
-	return the notification output;
-	'''
     ai.control_list_view('[title:NetLinx Studio]','SysListView328','SelectAll')
     haha=ai.control_list_view('[title:NetLinx Studio]','SysListView328','GetSelectedCount')
     selected=int(haha)
@@ -62,12 +59,8 @@ def get_comeback_message():
         
     return out
 
+
 def command_thor_test(command):
-	u'''
-	input: command line
-	execute thor command in NetLinx Studio. eg:
-	| command_thor_test | command |
-	'''
     try:
         ai.win_activate('[title:Control a Device]')
     except ai.AutoItError:
@@ -101,9 +94,6 @@ def command_thor_test(command):
 
 logger.cfgLevel("debug")
 def click_ClearList():
-	u'''
-	Active ICSPMonitor output content!
-	'''
     try:
         ai.win_activate('[title:ICSPMonitor - V7.2.115]')
     except ai.AutoItError:
@@ -130,9 +120,6 @@ def click_ClearList():
 """
 
 def ns_refresh_system():
-	u'''
-	refresh NetLinx Studio online tree!
-	'''
     #ai.win_activate("[CLASS:Afx:00D80000:8:00010003:00000000:014702D7]")
     #ai.win_activate('[CLASSNAMENN:SysTreeView322]')
     try:
@@ -149,12 +136,6 @@ def ns_refresh_system():
     print('refresh sucess')
 
 def reset_factory_by_ns(device,system):
-	u'''
-	input: device, system
-	Make the device to execute facotry reset! eg:
-	| reset_factory_by_ns | device num | system num |
-	'''
-		
     device = str(device)
     system = str(system)
     win_activate("[title:NetLinx Studio]")
