@@ -444,4 +444,40 @@ def get_matrix(iInput,iOutput):
             print "some output"
             for output_id in outlist:
                 matrix[input_id-1][int(output_id)-1]=1
-    return matrix       
+    return matrix  
+def parse_get_device_and_ip(sInputs):
+    u'''
+    this function is used for parse the telnet commmand "show device" \n
+    @reutrn:        \n
+    output is 3 list: device number, device name, ip address \n
+    @param :        \n
+     return value of telnet command "show device"       \n
+    For example:        \n
+    dNumber,dName,dIP = parse_get_device_and_ip(sInput)
+    '''
+    
+    xx = sInputs.split('\r\n')
+    yy=[]
+    for i in xx:
+        for j in i.split(u'  '):#split the \r\n and  '  '
+            yy.append(j.encode('unicode-escape').decode('string-escape'))
+    count = 0
+    for i in range(0,len(yy)):
+        if yy[i]=='':
+            count+=1        #remove count times u''
+    for i in range(0,count):
+        yy.remove('')
+    #return yy
+    pattern  = re.compile(r'^[0-9]{5}$')
+    pattern2 = (r'Physical Address')
+    device_number = []
+    device_name = []
+    ip = []
+    for i in range(0,len(yy)): #find the five number and physical address
+        if pattern.match(yy[i]) != None:
+            device_number.append(yy[i])
+            device_name.append(yy[i+1])
+        if (yy[i].find(pattern2))==1:
+            ip.append(yy[i].replace(' Physical Address=IP ',''))
+        
+    return device_number,device_name,ip    
