@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from icsp_operation import *
+from open_thor_operation import open_thor_operation
 import logger
 
 logger.initLogger()
@@ -9,6 +10,40 @@ logger.initLogger()
 #init RobotFramework
 ROBOT_LIBRARY_SCOPE = "GLOBAL"
 ROBOT_EXIT_ON_FAILURE = True
+
+devMac = "00-60-9f-a4-5f-ae"
+#devMac = "xx-xx-xx-xx-xx-xx"
+sMac = "00-60-9f-a4-0e-a9"
+#sMac = "xx-xx-xx-xx-xx-xx"
+username="administrator"
+pwd="password"
+sPort = "1"
+sSystem = "0"
+
+def open_thor_command(sDmac="",sMMac="",sUsername="",sPwd="",sP="",sSys=""):
+    u'''
+    if you want to test icsp command from NetlinxStudio, this config will
+    open Netlinux Studio and thor command windows automatic.
+    @param:
+    sDmac(required): Device Mac address, default"xx-xx-xx-xx-xx-xx"
+    sMMac(required): Master Mac address, default"xx-xx-xx-xx-xx-xx"
+    username: the username of master telnet username, default:"administrator"
+    pwd: the password of master telnet password, default:"password"
+    sPort: P port of the master, default: "1"
+    sSystem: S port of the master, default: "0"
+    eg:
+    | open_thor_command | sDmac,sMMac,<sUsername>,<sPwd>,<sP>,<sSys> |
+    '''
+    global devMac,sMac,username, pwd, sPort, sSystem
+    if sDmac == "": sDmac = devMac
+    if sMMac == "": sMMac = sMac
+    if sUsername == "": sUsername = username
+    if sPwd == "": sPwd = pwd
+    if sP == "": sP = sPort
+    if sSys == "": sSys = sSystem
+    otc = open_thor_operation(sDmac,sMMac,sUsername,sPwd,sP,sSys)
+    #otc = openThorWindow(devMac,sMac)
+    otc.open_thor_win()
 
 def icsp_random_switch(input,output,times):
     u'''
@@ -133,8 +168,8 @@ def icsp_order_switch(input,output):
             return False                
     return True                  
     
-'''if __name__ == '__main__':
-    print get_matrix(8, 10)
-    print order_swtich(8, 8)
-    print random_switch(8,8,10)
-'''
+if __name__ == '__main__':
+    #print get_matrix(8, 10)
+    #print order_swtich(8, 8)
+    #print random_switch(8,8,10)
+    open_thor_command()
