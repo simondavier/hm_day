@@ -7,7 +7,8 @@ from autoit import *
 from icsp_operation import *
 from telnet_operation import TelnetApp
 
-class openThorWindow(object):
+#class openThorWindow(object):
+class open_thor_operation(object):
     def __init__(self,devMac,sMac,username="administrator",pwd="password",sPort="1",sSystem="0"):
         self.devMac=devMac
         self.sMac=sMac
@@ -175,9 +176,9 @@ class openThorWindow(object):
         | get_ip | xx-xx-xx-xx-xx-xx |    
         '''
         self.sMac = sMac
-        for line in os.popen('arp -a').readlines():
-            print line
-            if (sMac in line):
+        for line in os.popen("arp -a").readlines()[3:]:
+            print line.split()[1]
+            if (sMac in line.split()[1]):
                 return line.split()[0]
         else:
             raise RuntimeError("No this MAC address found!!")
