@@ -1,5 +1,6 @@
 *** Settings ***
-Library           ../../Libs/icsp_module.py
+Suite Setup       Setup_pre_config
+Library           ../../../hm_day/AMX/source/MyTestLibrary/icsp_module.py
 
 *** Test Cases ***
 001_Order_switch
@@ -17,7 +18,7 @@ Library           ../../Libs/icsp_module.py
     ...    Comments:
     ...    1. Master sometimes can not get the result;
     ...    2. This test should last 2 hours after init running.
-    ${res}    Icsp Order Swtich    8    8
+    ${res}    Icsp Order Switch    8    8
     Should Be Equal    ${res}    True
 
 002_Random_switch
@@ -39,3 +40,9 @@ Library           ../../Libs/icsp_module.py
     ...    2. This test time will be last according to execute times.
     ${res}    Random Switch    8    8    1000
     Should Be Equal    ${res}    True
+
+*** Keywords ***
+Setup_pre_config
+    log    test begin:
+    Open Thor Command    00-60-9f-a4-5f-ae    00-60-9f-a4-0e-a9
+    sleep    5
