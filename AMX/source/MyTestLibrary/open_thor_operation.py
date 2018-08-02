@@ -36,7 +36,7 @@ class open_thor_operation(object):
         command = 'show device'
         out = tn.excut_command(command)
         print out
-        dNumber, dName, dIP = tn.parse_get_device_and_ip(out)
+        dNumber, dName, dIP,dserial = tn.parse_get_device_and_ip(out)
         dic = {}
         for i in range(len(dNumber)):
             dic[dIP[i]] = dNumber[i]
@@ -71,7 +71,7 @@ class open_thor_operation(object):
         win_active("[Title:Communications Settings]")
         # clear All device
         time.sleep(5)
-        control_click('[Class:#32770]', '10045')
+        control_click("[Title:Communications Settings]", "Button7")
         # Add a master to list
         send("!N")
         # sMac="00-60-9f-9d-90-03"
@@ -84,9 +84,9 @@ class open_thor_operation(object):
         time.sleep(0.5)
         send("{ENTER}")
         time.sleep(0.5)
-        win_active('[Workspace Communication Settings]')
+        win_active("[Title:Workspace Communication Settings]")
         time.sleep(0.5)
-        control_click('[Class:#32770]', 'Button2')
+        control_click("[Title:Workspace Communication Settings]", 'Button2')
         return ip
     
     def open_notification(self,sDevice):
