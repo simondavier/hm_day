@@ -11,9 +11,9 @@ logger.initLogger()
 ROBOT_LIBRARY_SCOPE = "GLOBAL"
 ROBOT_EXIT_ON_FAILURE = True
 
-devMac = "00-60-9f-a4-5f-ae"
+devMac = "00-60-9f-a4-5f-90"
 #devMac = "xx-xx-xx-xx-xx-xx"
-sMac = "00-60-9f-a4-0e-a9"
+sMac = "00-60-9f-9d-8f-55"
 #sMac = "xx-xx-xx-xx-xx-xx"
 username="administrator"
 pwd="password"
