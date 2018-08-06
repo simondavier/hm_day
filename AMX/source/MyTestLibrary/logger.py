@@ -12,8 +12,8 @@ import time
 
 sLevelDft = "Warning"   #default log level is warning
 sToFileDft = "False"    #default is NOT write to file just console only
-sFormat = "[%(asctime)s] <%(levelname)s> %(filename)s.%(lineno)d: %(message)s"
-sFile = "AutoTest_" + time.strftime("%Y%m%d_%H%M%S") + ".log"
+sFormat = "%(asctime)s [%(levelname)s] %(filename)s(%(lineno)d): %(message)s"
+sFile = "./Logs/AutoTest_" + time.strftime("%Y%m%d_%H%M%S") + ".log"
 handler = None
 prt = None
 
