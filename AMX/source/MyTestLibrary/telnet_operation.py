@@ -47,6 +47,7 @@ class TelnetApp(object):
             raise SystemError('this IP '+sIpAddress+' could not connected by telnet!!!')
     def excut_command(self,command):
         self.tn.write((command+'\r\n').encode('utf-8'))
+        #self.tn.write((command)+'\r')
         time.sleep(1)
         out=self.tn.read_very_eager().decode('ascii')
         return out
@@ -83,15 +84,18 @@ class TelnetApp(object):
         pattern2 = (r'Physical Address')
         device_number = []
         device_name = []
+        device_serial = []
         ip = []
         for i in range(0,len(yy)): #find the five number and physical address
             if pattern.match(yy[i]) != None:
                 device_number.append(yy[i])
                 device_name.append(yy[i+1])
+            if yy[i].find('Pings') >=0:# the item befor "Failed Pings=0"
+                device_serial.append(yy[i-1])
             if (yy[i].find(pattern2))==1:
                 ip.append(yy[i].replace(' Physical Address=IP ',''))
             
-        return device_number,device_name,ip   
+        return device_number,device_name,ip,device_serial   
     def parse_get_ip(self,sInput):
         u'''
         sIput is the return message of telnet command "get ip" \n
@@ -151,4 +155,60 @@ class TelnetApp(object):
                yy[i].find('Master Ip/URL')>=0 or yy[i].find('Master Port')>=0:
                 out[yy[i]]=yy[i+1].strip()
         return out  
+    def parse_set_friendlyname(self,sInput):
+         u'''
+         the input is return message of telnemt command "set friendlyname"\n
+         set friendlyname\r 's return message is  like this:
+            please input friendlyname:
+            old friendlyname:heh  new friendlyname:
+            Cancel this setting
+         parse to get the current friendlyname (eg,heh)
+         '''
+         xx = sInput.splitlines(False)
+         out=''
+         out=xx[2].split('friendlyname:')[1].split('new')[0].strip()
+         return out
+    def parse_set_location(self,sInput):
+         u'''
+         the input is return message of telnemt command "set location"\n
+         set connection\r 's return message is  like this:
+            please input location:
+            old location:haha  new location:
+            Cancel this setting 
+         parse to get the current friendlyname
+         '''
+         xx = sInput.splitlines(False)
+         print xx
+         out=''
+         out=xx[2].split('location:')[1].split('new')[0].strip()
+         return out   
+    def parse_dns_list(self,sInput):
+        u'''
+        check dns list 1# and dns 2#
+        the command is "dns list"
+        DNS List:
+        DNS #1:    192.168.1.1
+        DNS #2:    8.8.8.8
+        '''
+        xx = sInput.splitlines(False)
+        print xx
+        out=[]
+        for i in xx:
+            temp = i.split('DNS #1:')
+            temp1= i.split('DNS #2:')
+            if len(temp)>=2:
+                out.append(temp[1].strip())
+            elif len(temp1)>=2:
+                out.append(temp1[1].strip())
+        print out
+        return out
         
+         
+         
+         
+         
+         
+         
+         
+         
+         
