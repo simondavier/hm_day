@@ -182,10 +182,24 @@ class open_thor_operation(object):
                 return line.split()[0]
         else:
             raise RuntimeError("No this MAC address found!!")
+    #close Netlinx Studio
+    def close_thor_operation(self):
+        win_active("[title:Control a Device]")
+        #close thor window
+        send("!{F4}")
+        time.sleep(0.5)
+        win_active("[title:NetLinx Studio]")
+        send("!F")
+        send("^x")
     
-if __name__ == '__main__':
+    def __del__(self):
+        class_name=self.__class__.__name__
+        print("object has been delete")        
+    
+"""if __name__ == '__main__':
     
     devMac = "00-60-9f-a4-5f-ae"
     sMac = "00-60-9f-9d-90-03"
     otw = openThorWindow(devMac,sMac)
-    otw.open_thor_win()  
+    otw.open_thor_win()
+"""  
