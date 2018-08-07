@@ -36,17 +36,24 @@ class open_thor_operation(object):
         command = 'show device'
         out = tn.excut_command(command)
         print out
-        dNumber, dName, dIP,dserial = tn.parse_get_device_and_ip(out)
+        dNumber, dName, dIP,dSerial = tn.parse_get_device_and_ip(out)
         dic = {}
         for i in range(len(dNumber)):
             dic[dIP[i]] = dNumber[i]
         sDevice = self.devIp2port(dic, devIP)
         print ("the device ports is %s" % sDevice)
         self.open_notification(sDevice)
-        time.sleep(2)
+        time.sleep(0.5)
         send("!D")
-        send("^C")
-        win_wait_active("[title:Control a Device]", 3)
+        time.sleep(0.5)
+        send("+C")
+        ret=win_wait_active("[title:Control a Device]", 5)
+        #if can not open "Control a Device" window, then reclick it again
+        if(ret==0):
+            time.sleep(0.5)
+            mouse_click("left",255,14)
+            time.sleep(0.5)
+            mouse_click("left",255,180)
         time.sleep(0.5)
         control_set_text("[title:Control a Device]", "Edit1", sDevice)
         control_set_text("[title:Control a Device]", "Edit2", self.sPort)
@@ -66,11 +73,12 @@ class open_thor_operation(object):
         run("C:\Program Files (x86)\AMX Control Disc\NetLinx Studio 4\NSXV4.exe")
         win_wait_active("[Title:NetLinx Studio]", 3)
         send("!S")
-        send("^W")
+        time.sleep(0.5)
+        send("+W")
+        time.sleep(0.5)
         send("!D")
-        win_active("[Title:Communications Settings]")
+        win_wait_active("[Title:Communications Settings]",10)
         # clear All device
-        time.sleep(5)
         control_click("[Title:Communications Settings]", "Button7")
         # Add a master to list
         send("!N")
@@ -84,7 +92,7 @@ class open_thor_operation(object):
         time.sleep(0.5)
         send("{ENTER}")
         time.sleep(0.5)
-        win_active("[Title:Workspace Communication Settings]")
+        win_wait_active("[Title:Workspace Communication Settings]", 3)
         time.sleep(0.5)
         control_click("[Title:Workspace Communication Settings]", 'Button2')
         return ip
@@ -102,10 +110,10 @@ class open_thor_operation(object):
         self.sDevice=sDevice
         win_wait_active("[Title:NetLinx Studio]", 2)
         auto_it_set_option("MouseCoordMode", 2)
-        mouse_click("left", 255, 14)
         time.sleep(0.5)
-        mouse_click("left", 255, 25)
+        send("!D")
         time.sleep(0.5)
+        send("+O")
         win_wait_active("[title:NetLinx Device Notifications Options]", 5)
         time.sleep(0.5)
         control_click("[title:NetLinx Device Notifications Options]", 'Button5')
@@ -122,7 +130,7 @@ class open_thor_operation(object):
         mouse_click("left", 40, 267)
         control_click("[title:NetLinx Notification Properties - [Add]]", 'Button7')
         time.sleep(0.5)
-        win_active("[title:NetLinx Device Notifications Options]")
+        win_wait_active("[title:NetLinx Device Notifications Options]",3)
         time.sleep(0.5)
         control_click("[title:NetLinx Device Notifications Options]", 'Button6')
         time.sleep(1)
@@ -175,7 +183,6 @@ class open_thor_operation(object):
         eg:
         | get_ip | xx-xx-xx-xx-xx-xx |    
         '''
-        self.sMac = sMac
         for line in os.popen("arp -a").readlines()[3:]:
             print line.split()[1]
             if (sMac in line.split()[1]):
@@ -184,13 +191,14 @@ class open_thor_operation(object):
             raise RuntimeError("No this MAC address found!!")
     #close Netlinx Studio
     def close_thor_operation(self):
-        win_active("[title:Control a Device]")
+        win_wait_active("[title:Control a Device]",3)
         #close thor window
         send("!{F4}")
         time.sleep(0.5)
         win_active("[title:NetLinx Studio]")
         send("!F")
-        send("^x")
+        time.sleep(0.5)
+        send("+x")
     
     def __del__(self):
         class_name=self.__class__.__name__
