@@ -3,8 +3,10 @@
 Created on Mon May  7 11:38:18 2018
 
 @author: WeicZhang
-"""
 
+the class name TelnetApp is not same as filename telnet_operation, so can not import in RF test suite!
+
+"""
 
 
 import telnetlib
@@ -12,8 +14,6 @@ import time
 import re
 class TelnetApp(object):
     def __init__(self,sIpAddress,sLoginName,sLoginPassword):
-        self.tn = None
-   # def build_connection(self,sIpAddress,sLoginName,sLoginPassword):
         u'''
         @parameter:\n
         sIpAddress is ip address of telnet to connected \n
@@ -22,6 +22,8 @@ class TelnetApp(object):
         @return:            \n
         an telnet object,which is used in other method "excut_command" and  "kill_connection"
         '''
+        self.tn = None
+        self.out_str = ''
         try:
             self.tn = telnetlib.Telnet(sIpAddress,23,5)
             try:
@@ -33,30 +35,30 @@ class TelnetApp(object):
             time.sleep(1)
             self.tn.write((sLoginPassword+'\r\n').encode('utf-8'))
             time.sleep(0.5)
-            out_str = self.tn.read_very_eager().decode('ascii')
-            print(out_str)
-            #return out_str
-            if  'Invalid username and/or password or user account is temporarily locked out'  in out_str:
-                print('this username '+sLoginName+'or password'+sLoginPassword+ 'is invalid!!!')
-                raise ValueError('this USERNAME: '+sLoginName+' or PASSWORD: '+sLoginPassword+ ' is invalid!!!')
-                #throwerror(sLoginName,sLoginPassword)
-                #return
+            self.out_str = self.tn.read_very_eager().decode('ascii')
+            #print(self.out_str)
+            if  'Invalid username and/or password or user account is temporarily locked out'  in self.out_str:
+                #print('this username '+sLoginName+' or password '+sLoginPassword+ ' is invalid!!!')
+                raise ValueError
         except ValueError:
-            raise SystemError('this USERNAME '+sLoginName+' or PASSWORD: '+sLoginPassword+ ' is invalid!!!')
+            raise ValueError('this USERNAME '+sLoginName+' or PASSWORD: '+sLoginPassword+ ' is invalid!!!')
         except Exception:
-            raise SystemError('this IP '+sIpAddress+' could not connected by telnet!!!')
+            raise RuntimeError('this IP '+sIpAddress+' could not connected by telnet!!!')
+        
     def excut_command(self,command):
         self.tn.write((command+'\r\n').encode('utf-8'))
         #self.tn.write((command)+'\r')
         time.sleep(1)
         out=self.tn.read_very_eager().decode('ascii')
         return out
+    
     def kill_connection(self):
         try:
             self.tn.close()
             return 0
         except:
             return -1
+        
     def parse_get_device_and_ip(self,sInputs):
         u'''
         this function is used for parse the telnet commmand "show device" \n
@@ -95,7 +97,8 @@ class TelnetApp(object):
             if (yy[i].find(pattern2))==1:
                 ip.append(yy[i].replace(' Physical Address=IP ',''))
             
-        return device_number,device_name,ip,device_serial   
+        return device_number,device_name,ip,device_serial
+    
     def parse_get_ip(self,sInput):
         u'''
         sIput is the return message of telnet command "get ip" \n
@@ -154,34 +157,46 @@ class TelnetApp(object):
             if yy[i].find('Connection Mode')>=0 or yy[i].find('System Number')>=0 or \
                yy[i].find('Master Ip/URL')>=0 or yy[i].find('Master Port')>=0:
                 out[yy[i]]=yy[i+1].strip()
-        return out  
+        return out
+    
     def parse_set_friendlyname(self,sInput):
-         u'''
-         the input is return message of telnemt command "set friendlyname"\n
-         set friendlyname\r 's return message is  like this:
-            please input friendlyname:
-            old friendlyname:heh  new friendlyname:
-            Cancel this setting
-         parse to get the current friendlyname (eg,heh)
-         '''
-         xx = sInput.splitlines(False)
-         out=''
-         out=xx[2].split('friendlyname:')[1].split('new')[0].strip()
-         return out
+        u'''
+        the input is return message of telnemt command "set friendlyname"\n
+        set friendlyname\r 's return message is  like this:
+           please input friendlyname:
+           old friendlyname:heh  new friendlyname:
+           Cancel this setting
+        parse to get the current friendlyname (eg,heh)
+        
+        '''
+        xx = sInput.splitlines(False)
+        out=''
+        try:
+            out=xx[2].split('friendlyname:')[1].split('new')[0].strip()
+        except:
+            out=xx[3].split('friendlyname:')[1].split('new')[0].strip()
+        return out
+
+     
+
     def parse_set_location(self,sInput):
-         u'''
-         the input is return message of telnemt command "set location"\n
-         set connection\r 's return message is  like this:
-            please input location:
-            old location:haha  new location:
-            Cancel this setting 
-         parse to get the current friendlyname
-         '''
-         xx = sInput.splitlines(False)
-         print xx
-         out=''
-         out=xx[2].split('location:')[1].split('new')[0].strip()
-         return out   
+        u'''
+        the input is return message of telnemt command "set location"\n
+        set connection\r 's return message is  like this:
+           please input location:
+           old location:haha  new location:
+           Cancel this setting 
+        parse to get the current friendlyname
+        '''
+        xx = sInput.splitlines(False)
+        print xx
+        out=''
+        try:
+            out=xx[2].split('location:')[1].split('new')[0].strip()
+        except:
+            out=xx[3].split('location:')[1].split('new')[0].strip()
+        return out   
+
     def parse_dns_list(self,sInput):
         u'''
         check dns list 1# and dns 2#
@@ -203,7 +218,6 @@ class TelnetApp(object):
         print out
         return out
         
-         
          
          
          
