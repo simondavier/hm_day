@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connection Page</title>
+    <script type="text/javascript" src="/static/videotoolApp/js/jquery-3.1.1.min.js"></script>
+
+</head>
+    <body>
+    <div>
+        <form>
+            {% csrf_token %}
+            QuantumDevice:
+            <select name="qdmodel" id="qdmodel">
+              <option value="780E">780E</option>
+              <option value="980B">980B</option>
+            </select>
+            Master IP:
+            <input type="text" id="ipaddress" />
+            <br/>
+            Username:
+            <input type="text" id="username" />
+            Password:
+            <input type="password" id="password" />
+            <button type="button" id="submit">Connect</button>
+        </form>
+    </div>
+    <div>
+        <form action="" method="post">
+            <span>Serial Ports:</span>
+            <div>
+                <select name="serialselect" id="serialselect">
+                </select>
+            </div>
+            <div>
+                <span>SUT Devices:</span><br/>
+                <select name="deviceselect" id="deviceselect" size="1">
+                    {% for device in device_name %}
+                        <option value={{ forloop.counter }}>{{ device }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td>
+                            <span>SUT Input Port:</span><br/>
+                            <select name="porttypeselect_in" id="porttypeselect_in" size="1">
+                            </select>
+                        </td>
+                        <td>
+                            <span>PortNumber:</span><br/>
+                            <select name="portnumberselect_in" id="portnumberselect_in" size="1">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>SUT Output Port:</span><br/>
+                            <select name="porttypeselect_out" id="porttypeselect_out" size="1">
+                            </select>
+                        </td>
+                        <td>
+                            <span>PortNumber:</span><br/>
+                            <select name="portnumberselect_out" id="portnumberselect_out" size="1">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript" src="/static/videotoolApp/js/deviceselect.js"></script>
+    </body>
+</html>
