@@ -35,9 +35,9 @@
             <div>
                 <span>SUT Devices:</span><br/>
                 <select name="deviceselect" id="deviceselect" size="1">
-                    {% for device in device_name %}
+                    <!-- {% for device in device_name %}
                         <option value={{ forloop.counter }}>{{ device }}</option>
-                    {% endfor %}
+                    {% endfor %} -->
                 </select>
             </div>
             <div>
@@ -52,6 +52,10 @@
                             <span>PortNumber:</span><br/>
                             <select name="portnumberselect_in" id="portnumberselect_in" size="1">
                         </td>
+                        <td>
+                            <span>Timing List:</span><br/>
+                            <select name="timingselect_in" id="timingselect_in" size="1">
+                        </td>
                     </tr>
                     <tr>
                         <td>
@@ -62,6 +66,10 @@
                         <td>
                             <span>PortNumber:</span><br/>
                             <select name="portnumberselect_out" id="portnumberselect_out" size="1">
+                        </td>
+                        <td>
+                            <span>Timing List:</span><br/>
+                            <select name="timingselect_out" id="timingselect_out" size="1">
                         </td>
                     </tr>
                 </table>

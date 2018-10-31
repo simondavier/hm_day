@@ -29,8 +29,14 @@ $(document).ready(function () {
             success: function (ret) {
                 //$('#deviceselect').remove()
                 $('#deviceselect').empty()
+                var arr = ret.device_number
+               
                 $.each(ret.device_name, function (i, value) {
-                    $('#deviceselect').append("<option value="+i+">"+value+"</option>")
+                   
+                    var temp1 = value
+                    var temp2 = ret.device_number[i]
+                    var temp3 = temp2+'----'+temp1
+                    $('#deviceselect').append("<option value="+i+">"+temp3+"</option>")
                     $('#deviceselect').attr('size',i+1)
                 });
                 //$('#mydiv').append(data.device_number[0]+'<br>');
@@ -39,10 +45,11 @@ $(document).ready(function () {
     })
 
     $('#deviceselect').click(function () {
+        console.log($("#deviceselect").find("option:selected").text())
         $.ajax({
             type: 'get',
             url: '/querydevicein/',
-            data: {'devicename':$("select option:selected").text()},
+            data: {'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#porttypeselect_in').empty()
@@ -56,7 +63,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'get',
             url: '/querydeviceout/',
-            data: {'devicename':$("select option:selected").text()},
+            data: {'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#porttypeselect_out').empty()
@@ -69,6 +76,8 @@ $(document).ready(function () {
 })
 
     $('#porttypeselect_in').click(function () {
+        console.log('xxxxx')
+        console.log($("#deviceselect").find("option:selected").text())
         $.ajax({
             type: 'get',
             url: '/queryportin/',
@@ -88,7 +97,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'get',
             url: '/queryportout/',
-            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text()},
+            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text(),'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#portnumberselect_out').empty()

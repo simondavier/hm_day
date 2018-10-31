@@ -3,7 +3,9 @@
 
 from icsp_operation import *
 from open_thor_operation import open_thor_operation
+from device_bind_operation import *
 import logger
+import time
 
 logger.initLogger()
 
@@ -41,9 +43,28 @@ def open_thor_command(sDmac="",sMMac="",sUsername="",sPwd="",sP="",sSys=""):
     if sPwd == "": sPwd = pwd
     if sP == "": sP = sPort
     if sSys == "": sSys = sSystem
-    otc = open_thor_operation(sDmac,sMMac,sUsername,sPwd,sP,sSys)
-    #otc = openThorWindow(devMac,sMac)
-    otc.open_thor_win()
+    oto = open_thor_operation(sDmac,sMMac,sUsername,sPwd,sP,sSys)
+    #oto = openThorWindow(devMac,sMac)
+    ip_ms = oto.open_netlinx()
+    #TODO:refresh online tree,bind device,Create CSV
+    click_onlinetree_tab()
+    refresh_onlinetree()
+    while True:
+        sDut = check_ubund()
+        if sDut:
+            bind_device()
+        else:
+            print 'no device need bind'
+            break
+    creat_online_tree_report()
+    #TODO get device port from csv and device's ip
+    print oto.get_device_ip(sDmac)
+    sDeviceNum = oto.get_device_port(sDmac)
+    #TODO open_notification
+    oto.open_notification(sDeviceNum)
+    #TODO open_thor_win
+    oto.open_thor_win()
+    del oto
 
 def icsp_random_switch(input,output,times):
     u'''
@@ -79,7 +100,7 @@ def icsp_random_switch(input,output,times):
         command='CI'+sInput+'O'+sOutput
         #print 'send command is:'+command
         logger.prt.info("CI"+sInput+"O"+sOutput)
-        command_thor_test(command)
+        send_thor_command(command)
         newMatrix = get_matrix(input,output+2)
         #print newMatrix
         logger.prt.info(newMatrix)
@@ -129,7 +150,7 @@ def icsp_order_switch(input,output):
             print 'print origin after modified'
             print matrix
             command='CI'+in_id+'O'+ou_id
-            command_thor_test(command)
+            send_thor_command(command)
             newMatrix = get_matrix(input,output+2)
             print 'the newMatrix after set is: '
             print newMatrix
@@ -159,7 +180,7 @@ def icsp_order_switch(input,output):
         sInput=str(i)
         set_matrix(matrix, sInput, 'ALL')
         command = 'CI'+sInput+'OALL'
-        command_thor_test(command)
+        send_thor_command(command)
         newMatrix = get_matrix(input,output+2)
         if(compare_matrix(matrix, newMatrix)):
             continue
