@@ -39,10 +39,11 @@ $(document).ready(function () {
     })
 
     $('#deviceselect').click(function () {
+        console.log($("#deviceselect").find("option:selected").text())
         $.ajax({
             type: 'get',
             url: '/querydevicein/',
-            data: {'devicename':$("select option:selected").text()},
+            data: {'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#porttypeselect_in').empty()
@@ -56,7 +57,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'get',
             url: '/querydeviceout/',
-            data: {'devicename':$("select option:selected").text()},
+            data: {'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#porttypeselect_out').empty()
@@ -69,10 +70,12 @@ $(document).ready(function () {
 })
 
     $('#porttypeselect_in').click(function () {
+        console.log('xxxxx')
+        console.log($("#deviceselect").find("option:selected").text())
         $.ajax({
             type: 'get',
             url: '/queryportin/',
-            data: {'portnamein':$("#porttypeselect_in").find("option:selected").text()},
+            data: {'portnamein':$("#porttypeselect_in").find("option:selected").text(),'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#portnumberselect_in').empty()
@@ -88,7 +91,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'get',
             url: '/queryportout/',
-            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text()},
+            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text(),'devicename':$("#deviceselect").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#portnumberselect_out').empty()

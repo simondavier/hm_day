@@ -89,6 +89,7 @@ def querydevicein(request):
             continue
     else:
         print("no this device in database")
+        return JsonResponse({'porttype':[]},safe=False)
     sut2ports = Sut2Sutinport.objects.filter(ssut = deviceid)
     list = []
     for obj in sut2ports:
@@ -109,6 +110,7 @@ def querydeviceout(request):
             continue
     else:
         print("no this device in database")
+        return JsonResponse({'porttype':[]},safe=False)
     sut2ports = Sut2Sutouport.objects.filter(ssut = deviceid)
     list = []
     for obj in sut2ports:
@@ -119,12 +121,33 @@ def querydeviceout(request):
 
 def queryportin(request):
     portnamein = request.GET.get("portnamein")
+    devicename = request.GET.get("devicename")
+    print('xxxxxx')
+    print(devicename)
+    print('yyyyy')
+    devices = AMX_SUT.objects.all()
+    for device in devices:
+        if device.sModel in devicename:
+            deviceid = device.id
+            break
+        else:
+            continue
+    else:
+        print("no this device in database")
+        return JsonResponse({'porttype':[]},safe=False)
+    table_name = AMX_SUT.objects.get(pk=deviceid).sutinport2device
     port = Sutport.objects.get(sport=portnamein)
     print(port.id)
-    portobjs = Sutinport2PR0808.objects.filter(sutinport_id=port.id)
+    strr = table_name+'.objects.filter(sutinport_id=port.id)'
+    portobjs = eval(strr)
+    #portobjs = Sutinport2PR0808.objects.filter(sutinport_id=port.id)
     list = []
+    table_name2 = AMX_SUT.objects.get(pk=deviceid).device_input
+    
     for obj in portobjs:
-        var = PR0808_input.objects.get(pk=obj.pr_inportid)
+        #var = PR0808_input.objects.get(pk=obj.pr_inportid)
+        strr2 = table_name2+'.objects.get(pk=obj.pr_inportid)'
+        var  = eval(strr2) 
         list.append(var.portname+"-"+var.inportnumber.__str__())
     data = {'portnumberselect_in':list}
     print (data)
@@ -132,12 +155,32 @@ def queryportin(request):
 
 def queryportout(request):
     portnameout = request.GET.get("portnameout")
+    devicename = request.GET.get("devicename")
+    print('xxxxxx')
+    print(devicename)
+    print('yyyyy')
+    devices = AMX_SUT.objects.all()
+    for device in devices:
+        if device.sModel in devicename:
+            deviceid = device.id
+            break
+        else:
+            continue
+    else:
+        print("no this device in database")
+        return JsonResponse({'porttype':[]},safe=False)
+    table_name = AMX_SUT.objects.get(pk=deviceid).sutoutput2device
     port = Sutport.objects.get(sport=portnameout)
     print(port.id)
-    portobjs = Sutoutport2PR0808.objects.filter(sutoutport_id=port.id)
+    strr = table_name+'.objects.filter(sutoutport_id=port.id)'
+    portobjs = eval(strr)
+    #portobjs = Sutoutport2PR0808.objects.filter(sutoutport_id=port.id)
     list = []
+    table_name2 = AMX_SUT.objects.get(pk=deviceid).device_output
     for obj in portobjs:
-        var = PR0808_output.objects.get(pk=obj.pr_outportid)
+        #var = PR0808_output.objects.get(pk=obj.pr_outportid)
+        strr2 = table_name2+'.objects.get(pk=obj.pr_outportid)'
+        var  = eval(strr2) 
         list.append(var.portname+"-"+var.outportnumber.__str__())
     data = {'portnumberselect_out':list}
     print (data)

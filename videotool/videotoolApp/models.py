@@ -77,6 +77,12 @@ class Timing2QDoutport(models.Model):
 class AMX_SUT(models.Model):
     sModel = models.CharField(max_length=20)
     sFirmware = models.CharField(max_length=50)
+    device_output = models.CharField(max_length=100)
+    device_input = models.CharField(max_length=100)
+    sutinport2device = models.CharField(max_length=100)
+    sutoutput2device = models.CharField(max_length=100)
+    timing2deviceinput = models.CharField(max_length=100)
+    timing2deviceoutput = models.CharField(max_length=100)
     hasScaler = models.BooleanField(default=True)
     hasSwitch = models.BooleanField(default=True)
     isDelete = models.BooleanField(default=False)
