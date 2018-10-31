@@ -2,11 +2,11 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
 # Create your views here.
-
+from django.core.cache import cache
 #get serial connection
 from libs import serial_connection as serial
 from libs import telnet_operation as telnet
-
+import time
 #sc = serial.SerialConnection()
 
 def showtest(request):
@@ -31,7 +31,7 @@ def showdevice(request):
     out = tn.excut_command('show device')
     print(out)
     device_number,device_name,ip_device,device_serial= tn.parse_get_device_and_ip(out)
-    return JsonResponse({"device_name":device_name})
+    return JsonResponse({"device_name":device_name,"device_number":device_number})
 
 import csv
 from .models import Resolution
@@ -84,6 +84,7 @@ def querydevicein(request):
     for device in devices:
         if device.sModel in devicename:
             deviceid = device.id
+            cache.set('deviceid',deviceid,60*10)
             break
         else:
             continue
@@ -100,17 +101,17 @@ def querydevicein(request):
 
 def querydeviceout(request):
     #find output porttype according to device name
-    devicename = request.GET.get("devicename")
-    devices = AMX_SUT.objects.all()
-    for device in devices:
-        if device.sModel in devicename:
-            deviceid = device.id
-            break
-        else:
-            continue
+    #devicename = request.GET.get("devicename")
+    #
+    #time.sleep(2)
+    deviceid = cache.get('deviceid')
+    
+    if   deviceid:
+        pass
     else:
-        print("no this device in database")
+        print('querydeviceout'+'cache deviceid is not got')
         return JsonResponse({'porttype':[]},safe=False)
+    
     sut2ports = Sut2Sutouport.objects.filter(ssut = deviceid)
     list = []
     for obj in sut2ports:
@@ -121,23 +122,20 @@ def querydeviceout(request):
 
 def queryportin(request):
     portnamein = request.GET.get("portnamein")
-    devicename = request.GET.get("devicename")
+    
+    
+    deviceid = cache.get('deviceid')
     print('xxxxxx')
-    print(devicename)
+    print(deviceid)
     print('yyyyy')
-    devices = AMX_SUT.objects.all()
-    for device in devices:
-        if device.sModel in devicename:
-            deviceid = device.id
-            break
-        else:
-            continue
+    if  deviceid:
+        pass
     else:
-        print("no this device in database")
+        print('CACHE IS NOT EXIST NOW!')
         return JsonResponse({'porttype':[]},safe=False)
     table_name = AMX_SUT.objects.get(pk=deviceid).sutinport2device
     port = Sutport.objects.get(sport=portnamein)
-    print(port.id)
+    print('sdfsdf'+str(port.id))
     strr = table_name+'.objects.filter(sutinport_id=port.id)'
     portobjs = eval(strr)
     #portobjs = Sutinport2PR0808.objects.filter(sutinport_id=port.id)
@@ -155,19 +153,12 @@ def queryportin(request):
 
 def queryportout(request):
     portnameout = request.GET.get("portnameout")
-    devicename = request.GET.get("devicename")
-    print('xxxxxx')
-    print(devicename)
-    print('yyyyy')
-    devices = AMX_SUT.objects.all()
-    for device in devices:
-        if device.sModel in devicename:
-            deviceid = device.id
-            break
-        else:
-            continue
+    
+    deviceid = cache.get('deviceid')
+    if   deviceid:
+        pass
     else:
-        print("no this device in database")
+        print('queryportout'+'deviceid cache is not got')
         return JsonResponse({'porttype':[]},safe=False)
     table_name = AMX_SUT.objects.get(pk=deviceid).sutoutput2device
     port = Sutport.objects.get(sport=portnameout)

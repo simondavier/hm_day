@@ -21,29 +21,29 @@ ROBOT_LIBRARY_SCOPE = "GLOBAL"
 ROBOT_EXIT_ON_FAILURE = True
 
 def generate_random_port(arg):
-	u'''
-	input: max of random port number
+    u'''
+    input: max of random port number
     output: random number str of port	
-	use to generate random list.  eg:
-	| generate | arg |
-	'''
-	arg = int(arg)
-	list = []
-	listsample = []
-	list_res=[]
-	for i in range(1,arg+1):
-		list.append(i)
-	step = random.randint(1,arg)
-	if step<arg:
-		listsample = random.sample(list,step)
-		listsample.sort()
-		list_res=map(str,listsample)
-		str1 = ','.join(list_res)
-		return str1
-	else:
-		list_res=map(str,list)
-		str2 = ','.join(list_res)
-		return str2
+    use to generate random list.  eg:
+    | generate | arg |
+    '''
+    arg = int(arg)
+    list = []
+    listsample = []
+    list_res=[]
+    for i in range(1,arg+1):
+        list.append(i)
+    step = random.randint(1,arg)
+    if step<arg:
+        listsample = random.sample(list,step)
+        listsample.sort()
+        list_res=map(str,listsample)
+        str1 = ','.join(list_res)
+        return str1
+    else:
+        list_res=map(str,list)
+        str2 = ','.join(list_res)
+        return str2
 
 def get_comeback_message():
     ai.control_list_view('[title:NetLinx Studio]','SysListView328','SelectAll')
@@ -60,13 +60,32 @@ def get_comeback_message():
         
     return out
 
+def close_control_device_window():
+    ai.win_activate('[title:Control a Device]')
+    ai.send("!{F4}")
+    
+def open_control_device_window():
+    ai.win_activate('[title:NetLinx Studio]')
+    ai.send("!D")
+    time.sleep(0.1)
+    ai.send("+C")
+    
 
-def command_thor_test(command):
+def command_thor_test(command,devicenumber,portnumber=1,systemnumber=0):
     try:
         ai.win_activate('[title:Control a Device]')
     except ai.AutoItError:
         print('AutoItError happened, returned')
         return
+    time.sleep(0.1)
+    devicenumber=str(devicenumber)
+    portnumber=str(portnumber)
+    systemnumber=str(systemnumber)
+    ai.control_set_text('[title:Control a Device]','Edit1',devicenumber)
+    time.sleep(0.1)
+    ai.control_set_text('[title:Control a Device]','Edit2',portnumber)
+    time.sleep(0.1)
+    ai.control_set_text('[title:Control a Device]','Edit3',systemnumber)
     time.sleep(0.1)
     ai.control_focus('[title:Control a Device]','Edit8')
     time.sleep(0.1)
@@ -91,7 +110,7 @@ def command_thor_test(command):
         else:
             #print('even tried 4 times, the output is still empty')
             break
-    return out	
+    return out
 
 logger.cfgLevel("debug")
 def click_ClearList():
@@ -103,7 +122,7 @@ def click_ClearList():
         return
     time.sleep(0.1)
     ai.control_click('[title:ICSPMonitor - V7.2.115]','Button4')
-	
+
 """def get_comeback_message():
     ai.control_list_view('[title:ICSPMonitor - V7.2.115]','SysListView321','SelectAll')
     haha=ai.control_list_view('[title:ICSPMonitor - V7.2.115]','SysListView321','GetSelectedCount')
@@ -237,7 +256,7 @@ def usb_fw_update(ip,username,pwd,device):
         kill_connection(tn)
     else:
         print('telnet is not connected')
-        return			
+        return
        
 def factory_matrix():
     u'''
@@ -246,7 +265,7 @@ def factory_matrix():
     '''
     #reset device
     command = 'CI0OALL'
-    command_thor_test(command)
+    send_thor_command(command)
 
 def random_switch(input,output,times):
     u'''
@@ -274,7 +293,7 @@ def random_switch(input,output,times):
         #send command to device
         command='CI'+sInput+'O'+sOutput
         print 'send command is:'+command
-        command_thor_test(command)
+        send_thor_command(command)
         newMatrix = get_matrix(input,output+2)
         print newMatrix
         if(len(list)<output):
@@ -316,7 +335,7 @@ def order_swtich(input,output):
             print 'print origin after modified'
             print matrix
             command='CI'+in_id+'O'+ou_id
-            command_thor_test(command)
+            send_thor_command(command)
             newMatrix = get_matrix(input,output+2)
             print 'the newMatrix after set is: '
             print newMatrix
@@ -346,7 +365,7 @@ def order_swtich(input,output):
         sInput=str(i)
         set_matrix(matrix, sInput, 'ALL')
         command = 'CI'+sInput+'OALL'
-        command_thor_test(command)
+        send_thor_command(command)
         newMatrix = get_matrix(input,output+2)
         if(compare_matrix(matrix, newMatrix)):
             continue
@@ -427,7 +446,7 @@ def get_matrix(iInput,iOutput):
     #Check input of all output
     for input_id in range(1,iInput+1):
         command="?INPUT-ALL," + str(input_id)
-        out = command_thor_test(command)
+        out = send_thor_command(command)
         #abstract output number to list
         outlist = ''.join(re.findall('\( (.*?)\)',out)).split()
         #if it is no output?
@@ -481,3 +500,38 @@ def parse_get_device_and_ip(sInputs):
             ip.append(yy[i].replace(' Physical Address=IP ',''))
         
     return device_number,device_name,ip    
+
+def send_thor_command(command):
+    u'''
+    send thor command  without config D:P:S
+    '''
+    try:
+        ai.win_activate('[title:Control a Device]')
+    except ai.AutoItError:
+        print('AutoItError happened, returned')
+        return
+    time.sleep(0.1)
+    ai.control_focus('[title:Control a Device]','Edit8')
+    time.sleep(0.1)
+    ai.control_set_text('[title:Control a Device]','Edit8',command)
+    time.sleep(1)
+    ai.control_click('[title:Control a Device]','Button15')  #clear the command window
+    time.sleep(0.5)
+    ai.control_click('[title:Control a Device]','Button13')  #send the command work
+    time.sleep(4)
+    ai.win_activate('[title:NetLinx Studio]')
+    time.sleep(1)
+    count = 0
+    while True:
+        count+=1
+        #print('try '+str(count)+' time')
+        out = get_comeback_message()
+        if out!='':
+            #print('congratulations! the output is not empty')
+            break
+        elif count<=3:
+            time.sleep(3)
+        else:
+            #print('even tried 4 times, the output is still empty')
+            break
+    return out
