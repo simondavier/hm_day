@@ -14,6 +14,19 @@ $(document).ready(function () {
             success: function (ret) {
                 $('#serialselect').empty()
                 $('#serialselect').append("<option value="+ret.comName+">"+ret.comName+"</option>")
+                 $.ajax({    //send another ajax query to show qd device's output signal and connectors
+                //type: 'POST',
+                url: '/qddeviceselect/',
+                //dataType: 'json',
+                //data: {'qdmodel':qdmode},
+                success: function (ret) {
+                    $('#QDOUTPUTSIGNAL').empty()
+                    $.each(ret.qdoutporttype,function(i,value){
+                    $('#QDOUTPUTSIGNAL').append("<option value="+i+">"+value+"</option>")
+                    $('#QDOUTPUTSIGNAL').attr('size',i+1)
+                    })
+                    }
+                })
             }
         })
 
@@ -57,22 +70,50 @@ $(document).ready(function () {
                     $('#porttypeselect_in').append("<option value="+i+">"+value+"</option>")
                     $('#porttypeselect_in').attr('size',i+1)
                 })
+                $.ajax({  //after option items loaded, default is first one and we query input portnumbers right now
+                    type: 'get',
+                    url: '/queryportin/',
+                    data: {'portnamein':$("#porttypeselect_in").find("option:selected").text()},
+                    dataType: 'json',
+                    success: function (ret) {
+                        $('#portnumberselect_in').empty()
+                        $.each(ret.portnumberselect_in, function (i, value) {
+                            $('#portnumberselect_in').append("<option value="+i+">"+value+"</option>")
+                            $('#portnumberselect_in').attr('size',i+1)
+                        })
+                    }
+                })
+               //because first ajax will cause write cache in file, so we put this ajax to here, after //that ajax successly done
+                $.ajax({
+                            type: 'get',
+                            url: '/querydeviceout/',
+                            data: {'devicename':$("#deviceselect").find("option:selected").text()},
+                            dataType: 'json',
+                            success: function (ret) {
+                                $('#porttypeselect_out').empty()
+                                $.each(ret.porttype, function (i, value) {
+                                    $('#porttypeselect_out').append("<option value="+i+">"+value+"</option>")
+                                    $('#porttypeselect_out').attr('size',i+1)
+                                })
+                                $.ajax({//after option items loaded, default is first one and we query out portnumbers right now
+                                    type: 'get',
+                                    url: '/queryportout/',
+                                    data: {'portnameout':$("#porttypeselect_out").find("option:selected").text()},
+                                    dataType: 'json',
+                                    success: function (ret) {
+                                        $('#portnumberselect_out').empty()
+                                        $.each(ret.portnumberselect_out, function (i, value) {
+                                            $('#portnumberselect_out').append("<option value="+i+">"+value+"</option>")
+                                            $('#portnumberselect_out').attr('size',i+1)
+                                        })
+                                        }
+                                    })
+                            }
+                        })               
             }
         })
 
-        $.ajax({
-            type: 'get',
-            url: '/querydeviceout/',
-            data: {'devicename':$("#deviceselect").find("option:selected").text()},
-            dataType: 'json',
-            success: function (ret) {
-                $('#porttypeselect_out').empty()
-                $.each(ret.porttype, function (i, value) {
-                    $('#porttypeselect_out').append("<option value="+i+">"+value+"</option>")
-                    $('#porttypeselect_out').attr('size',i+1)
-                })
-            }
-        })
+        
 })
 
     $('#porttypeselect_in').click(function () {
@@ -97,7 +138,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'get',
             url: '/queryportout/',
-            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text(),'devicename':$("#deviceselect").find("option:selected").text()},
+            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#portnumberselect_out').empty()

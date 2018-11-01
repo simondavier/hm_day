@@ -133,5 +133,6 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': '/static/django_cache',
+        'TIMEOUT': None,
     }
 }

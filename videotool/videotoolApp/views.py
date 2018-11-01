@@ -15,16 +15,43 @@ def showtest(request):
 def connection(request):
     if debugmode==0:
         qdmodel = request.POST.get("qdmodel")
+        devices = QuantumDevice.objects.all()
+        for device in devices:
+            if device.qdmodel in qdmodel:
+                qddeviceid = device.id
+                cache.set('qddeviceid',deviceid)
+                break
+            else:
+                continue
+        else:
+            print("no this qddevice in qddatabase")
+            cache.set('qddeviceid',deviceid)
+            return JsonResponse({"comName":None})
         if qdmodel == '780E':
             sc = serial.SerialConnection()
             comName = sc.get_serial_name()
-        else:
+        
+        else:    
             comName = "None"
         sc.serial_close()
         return JsonResponse({"comName":comName})
     else:
+        cache.set('qddeviceid',1)
         return JsonResponse({"comName":'COM99'})
 
+def qddeviceselect(request):
+    qddeviceid = cache.get('qddeviceid')
+    
+    sut2ports = Quantum2QDoutput.objects.filter(quantum_model = qddeviceid)
+    list = []
+    for obj in sut2ports:
+        port = QDoutport.objects.get(pk=obj.qdport_type)
+        list.append(port.qport)
+    data = {'qdoutporttype':list}
+    return JsonResponse(data,safe=False)
+    
+        
+        
 def showdevice(request):
     
     if  debugmode==0:
@@ -95,12 +122,13 @@ def querydevicein(request):
     for device in devices:
         if device.sModel in devicename:
             deviceid = device.id
-            cache.set('deviceid',deviceid,60*10)
+            cache.set('deviceid',deviceid)
             break
         else:
             continue
     else:
         print("no this device in database")
+        cache.set('deviceid',None)
         return JsonResponse({'porttype':[]},safe=False)
     sut2ports = Sut2Sutinport.objects.filter(ssut = deviceid)
     list = []
@@ -113,10 +141,12 @@ def querydevicein(request):
 def querydeviceout(request):
     #find output porttype according to device name
     #devicename = request.GET.get("devicename")
-    #
-    #time.sleep(2)
+    # this delay is make sure cache is writed done
+    time.sleep(0.5)
     deviceid = cache.get('deviceid')
-    
+    print('+++++')
+    print(deviceid)
+    print('+++++')
     if   deviceid:
         pass
     else:
@@ -143,7 +173,7 @@ def queryportin(request):
         pass
     else:
         print('CACHE IS NOT EXIST NOW!')
-        return JsonResponse({'porttype':[]},safe=False)
+        return JsonResponse({'portnumberselect_in':[]},safe=False)
     table_name = AMX_SUT.objects.get(pk=deviceid).sutinport2device
     port = Sutport.objects.get(sport=portnamein)
     print('sdfsdf'+str(port.id))
@@ -166,11 +196,14 @@ def queryportout(request):
     portnameout = request.GET.get("portnameout")
     
     deviceid = cache.get('deviceid')
+    print('wwwww')
+    print(deviceid)
+    print('vvvvvv')
     if   deviceid:
         pass
     else:
         print('queryportout'+'deviceid cache is not got')
-        return JsonResponse({'porttype':[]},safe=False)
+        return JsonResponse({'portnumberselect_out':[]},safe=False)
     table_name = AMX_SUT.objects.get(pk=deviceid).sutoutput2device
     port = Sutport.objects.get(sport=portnameout)
     print(port.id)
