@@ -18,6 +18,12 @@ class Quantum2QDoutput(models.Model):
     quantum_model = models.IntegerField() #780E,980B
     qdport_type = models.IntegerField()  #VGA,HDMI,HDBASET,DVI
 
+class QuantumOutConnecter(models.Model):
+    qdporttype = models.IntegerField() #Singal XVSI
+    qdoutconnector = models.CharField(max_length=20) #Connctor HDMI,HDBASET,VGA
+
+class QuantumInConnecter(models.Model):
+    qdinconnector = models.CharField(max_length=20) #Connector HDMI,HDBASET,VGA
 
 #Define Resolution Manager
 class ResolutionManager(models.Manager):

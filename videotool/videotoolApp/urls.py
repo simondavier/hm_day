@@ -11,4 +11,5 @@ urlpatterns = [
     url('^queryportin/$',views.queryportin, name='queryportin'),
     url('^queryportout/$',views.queryportout, name='queryportout'),
     url('^qddeviceselect/$',views.qddeviceselect,name='qddeviceselect'),
+
 ]

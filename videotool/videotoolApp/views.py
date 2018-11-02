@@ -8,6 +8,7 @@ from libs import serial_connection as serial
 from libs import telnet_operation as telnet
 import time
 #sc = serial.SerialConnection()
+
 debugmode = 1 # if this value is 1, click connect will not use real telnet to link device and master
 def showtest(request):
     return render(request,'test.html')
@@ -19,13 +20,13 @@ def connection(request):
         for device in devices:
             if device.qdmodel in qdmodel:
                 qddeviceid = device.id
-                cache.set('qddeviceid',deviceid)
+                cache.set('qddeviceid',device.id)
                 break
             else:
                 continue
         else:
             print("no this qddevice in qddatabase")
-            cache.set('qddeviceid',deviceid)
+            cache.set('qddeviceid',device.id)
             return JsonResponse({"comName":None})
         if qdmodel == '780E':
             sc = serial.SerialConnection()
@@ -162,9 +163,8 @@ def querydeviceout(request):
     return JsonResponse(data,safe=False)
 
 def queryportin(request):
+    #find actual input port according to porttype
     portnamein = request.GET.get("portnamein")
-    
-    
     deviceid = cache.get('deviceid')
     print('xxxxxx')
     print(deviceid)
@@ -193,6 +193,7 @@ def queryportin(request):
     return JsonResponse(data,safe=False)
 
 def queryportout(request):
+    # find actual input port according to porttype
     portnameout = request.GET.get("portnameout")
     
     deviceid = cache.get('deviceid')
@@ -220,3 +221,35 @@ def queryportout(request):
     data = {'portnumberselect_out':list}
     print (data)
     return JsonResponse(data,safe=False)
+
+def executeTest(request):
+    #{传入的配置信息}
+    #1. 判断测试仪器型号;
+    qddeviceid = cache.get('qddeviceid')
+    if qddeviceid == 1:#780E
+        # 2. 设置quantum的连接端口;
+        #2.1设置Signal
+        sc.send_cmd('XVSI 4')
+        sc.send_cmd('ALLU')
+        #2.2设置Connector(HDMI/HDBASET)
+        connector = cache.get('qdconnector')
+        sc.send_cmd(connector)
+        pass
+    # 2. 设置quantum的连接端口;
+    elif qddeviceid == 2:
+        pass
+    # 2. 设置quantum的连接端口;
+    # 3. 设置发送的colorspace;
+    # 4. 得到测试项目开始测试项目;(目前是TX,RX测试)
+    # 5. 勾选了RX,TX?
+    # 6. 如果是勾选了RX则只判断Quantum，如果是TX则需要判断是Auto还是Bypass，如果是Auto，则需要发送不同的EDID，如果是Bypass不需要发送EDID;
+    # 7. 开始执行测试；
+
+def setqdOutputPort(request):
+    pass
+    #set Quantum device output port and signal, ready to send resolution
+
+def RXTest(request):
+    pass
+#1. 读一个Resolution
+

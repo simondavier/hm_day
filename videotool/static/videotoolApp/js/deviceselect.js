@@ -83,7 +83,8 @@ $(document).ready(function () {
                         })
                     }
                 })
-               //because first ajax will cause write cache in file, so we put this ajax to here, after //that ajax successly done
+               //because first ajax will cause write cache in file, so we put this ajax to here, after
+                // that ajax successly done
                 $.ajax({
                             type: 'get',
                             url: '/querydeviceout/',
