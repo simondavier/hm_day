@@ -167,4 +167,9 @@ class Qdpattern(models.Model):
     def __str__(self):
         print ("%s was in QD" % self.qpattern)
 
+class QdEdid(models.Model):
+    edid = models.CharField(max_length=20)
+    block0 = models.CharField(max_length=300)
+    block1 = models.CharField(max_length=300)
+
 
