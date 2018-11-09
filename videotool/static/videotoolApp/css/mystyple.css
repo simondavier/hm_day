@@ -1,0 +1,50 @@
+body {
+	background-color: lightblue;
+  	color: green;
+	font-family:sans-serif;
+    font-weight:bold; 
+}
+
+#porttypeselect_in,#porttypeselect_out{
+    background-color: green;
+    
+    
+    
+}
+#timingselect_in,#timingselect_out 
+{
+    background-color: cyan;
+  
+}
+#portnumberselect_in,#portnumberselect_out 
+{
+    background-color: DeepSkyBlue ;
+  
+}
+
+#QDPATTERNS{
+    background-color:blue
+}
+
+span{
+    /* color:green;
+    font-weight:bold; */
+    /* border-style:solid;
+	border-width:1px; */
+}
+/* div{
+    border-style:solid;
+	border-width:1px;
+    
+   
+} */
+.divinline{
+    width:500px;
+   float:left
+}
+.divinline2{
+    width:300px;
+   float:right 
+}
+    
+    
