@@ -11,5 +11,9 @@ urlpatterns = [
     url('^queryportin/$',views.queryportin, name='queryportin'),
     url('^queryportout/$',views.queryportout, name='queryportout'),
     url('^qddeviceselect/$',views.qddeviceselect,name='qddeviceselect'),
-
+    url('^querytimingin/$',views.querytimingin,name='querytimgingin'),
+    url('^querytimingout/$',views.querytimingout,name='querytimgingout'),
+    url('^qdpattern/$',views.qdpattern,name='qdpattern'),
+    url('^receive_submit/$',views.receive_submit,name='receive_submit'),
+    
 ]
