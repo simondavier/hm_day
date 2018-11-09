@@ -191,13 +191,24 @@ $(document).ready(function () {
             }
         })
     })
-    $('#QDPATTERNS').click(function () {
+    /* $('#QDPATTERNS').click(function () {
          $('#ipaddress1').attr('value','hehehhe') 
          $('#username1').attr('value','hahah') 
         console.log($("#QDPATTERNS").val())  //get the value of select list
         console.log($('#timingselect_in').val()) 
-        
+        var ret = {'hehe':[1,2,3,4]}
+        var hehe = 'hehe'
+        myfunction('#colorrange',ret,hehe)
     })
+    function myfunction(id,ret,hehe){
+       // alert('hello world!')
+       $(id).empty()
+       $.each(ret.hehe, function (i, value) {
+                    $(id).append("<option value="+i+">"+value+"</option>")
+                    $(id).attr('size',i+1)
+                })
+    } */
+    
     $('#porttypeselect_out').click(function () {
         $.ajax({
             type: 'get',
@@ -305,12 +316,15 @@ $(document).ready(function () {
         var RX_Video_Timing = $('#RX_Video_Timing').val()
         var TX_Video_Timing = $('#TX_Video_Timing').val()
         
+        var QDPATTERNS = $('#QDPATTERNS').val()
+        
         
         
         
         var sendout = {'ip':ip,'username':username,'passwordd':passwordd,'porttypeselect_in':porttypeselect_in,'portnumberselect_in':portnumberselect_in,
         'timingselect_in':JSON.stringify(timingselect_in),'porttypeselect_out':porttypeselect_out,'portnumberselect_out':portnumberselect_out,'timingselect_out':JSON.stringify(timingselect_out),'QDOUTPUTFILTER':QDOUTPUTFILTER,'colorrange':colorrange,'samplingmode':samplingmode,'saclertype':saclertype,'RX_Video_Timing':RX_Video_Timing,'TX_Video_Timing':TX_Video_Timing,
-        'QDOUTPUTSIGNAL':QDOUTPUTSIGNAL,'QDOUTPUTCONNECTOR':QDOUTPUTCONNECTOR,'QDINPUTSIGNAL':QDINPUTSIGNAL,'devicenumber':devicenumber,'portt':portt,'system':system}
+        'QDOUTPUTSIGNAL':QDOUTPUTSIGNAL,'QDOUTPUTCONNECTOR':QDOUTPUTCONNECTOR,'QDINPUTSIGNAL':QDINPUTSIGNAL,'devicenumber':devicenumber,'portt':portt,'system':system,
+        'QDPATTERNS':QDPATTERNS}
         console.log('submit1')
         console.log(sendout)
         
