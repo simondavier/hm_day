@@ -392,10 +392,13 @@ def receive_submit(request):
     cache.set('samplingmode',request.GET.get("samplingmode"))
     cache.set('saclertype',request.GET.get("saclertype"))
     cache.set('TX_Video_Timing',request.GET.get("TX_Video_Timing"))
+    print('///////')
+    print('TX_Video_Timing')
+    print('RX_Video_Timing')
     cache.set('RX_Video_Timing',request.GET.get("RX_Video_Timing"))
     print(cache.get('RX_Video_Timing'))# return value is on or off
     cache.set('QDOUTPUTFILTER',request.GET.get("QDOUTPUTFILTER"))
-    
+    cache.set('QDPATTERNS',request.GET.get('QDPATTERNS'))
     #username = request.GET.get("username")
     
     return JsonResponse(None,safe=False)

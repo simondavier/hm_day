@@ -1,29 +1,29 @@
 body {
-	background-color: lightblue;
-  	color: green;
-	font-family:sans-serif;
+	/* background-color: lightblue; */
+  	/* color: green; */
+	/* font-family:sans-serif; */
     font-weight:bold; 
 }
 
 #porttypeselect_in,#porttypeselect_out{
-    background-color: green;
+    /* background-color: green; */
     
     
     
 }
 #timingselect_in,#timingselect_out 
 {
-    background-color: cyan;
+    /* background-color: cyan; */
   
 }
 #portnumberselect_in,#portnumberselect_out 
 {
-    background-color: DeepSkyBlue ;
+    /* background-color: DeepSkyBlue ; */
   
 }
 
 #QDPATTERNS{
-    background-color:blue
+    /* background-color:blue */
 }
 
 span{
@@ -32,19 +32,44 @@ span{
     /* border-style:solid;
 	border-width:1px; */
 }
-/* div{
-    border-style:solid;
-	border-width:1px;
-    
+div{
+    /* border-style:solid; */
+	/* border-width:1px; */
+  
+}
+.container_sut_qd{
+  
+   display:flex;
+  align-items:stretch;
+  flex-wrap:no-wrap;
+  justify-content: space-around
+}
+.sut{
+   background-color: gray  ;
    
-} */
-.divinline{
-    width:500px;
-   float:left
 }
-.divinline2{
-    width:300px;
-   float:right 
+.qd{
+    background-color: gray  ; 
+ display:flex;
+ flex-wrap:no-wrap;
+   align-items:stretch;
+   justify-content: space-between
 }
-    
-    
+ .divinline3{
+  /*   width:500px; deleted
+   float:left */
+}   
+/*  .box1{
+    height:900px; 
+  display:flex;
+  align-items:stretch;
+   /* float:left;
+   flex-wrap:no-wrap;
+   width:auto;
+   margin:auto; */
+}  */  
+.box2{
+    float:left;
+   clear:both
+}
+

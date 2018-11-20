@@ -277,7 +277,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'get',
             url: '/querytimingout/',
-            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text(),'portnumberout':$("#portnumberselect_out").find("option:selected").text()},
+            data: {'portnameout':$("#porttypeselect_out").find("option:selected").text(),'portnumberout':$("#portnumberselect_out").find("option:selected").text(),'QDOUTPUTFILTER':$('#QDOUTPUTFILTER').find("option:selected").text()},
             dataType: 'json',
             success: function (ret) {
                 $('#timingselect_out').empty()
