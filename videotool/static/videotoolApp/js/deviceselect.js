@@ -312,7 +312,7 @@ $(document).ready(function () {
         var QDOUTPUTFILTER = $('#QDOUTPUTFILTER').val()
         var colorrange = $('#colorrange').val()
         var samplingmode = $('#samplingmode').val()
-        var saclertype = $('#saclertype').val()
+        var scalertype = $('#scalertype').val()
         var RX_Video_Timing = $('#RX_Video_Timing').val()
         var TX_Video_Timing = $('#TX_Video_Timing').val()
         
@@ -322,7 +322,7 @@ $(document).ready(function () {
         
         
         var sendout = {'ip':ip,'username':username,'passwordd':passwordd,'porttypeselect_in':porttypeselect_in,'portnumberselect_in':portnumberselect_in,
-        'timingselect_in':JSON.stringify(timingselect_in),'porttypeselect_out':porttypeselect_out,'portnumberselect_out':portnumberselect_out,'timingselect_out':JSON.stringify(timingselect_out),'QDOUTPUTFILTER':QDOUTPUTFILTER,'colorrange':colorrange,'samplingmode':samplingmode,'saclertype':saclertype,'RX_Video_Timing':RX_Video_Timing,'TX_Video_Timing':TX_Video_Timing,
+        'timingselect_in':JSON.stringify(timingselect_in),'porttypeselect_out':porttypeselect_out,'portnumberselect_out':portnumberselect_out,'timingselect_out':JSON.stringify(timingselect_out),'QDOUTPUTFILTER':QDOUTPUTFILTER,'colorrange':colorrange,'samplingmode':samplingmode,'scalertype':scalertype,'RX_Video_Timing':RX_Video_Timing,'TX_Video_Timing':TX_Video_Timing,
         'QDOUTPUTSIGNAL':QDOUTPUTSIGNAL,'QDOUTPUTCONNECTOR':QDOUTPUTCONNECTOR,'QDINPUTSIGNAL':QDINPUTSIGNAL,'devicenumber':devicenumber,'portt':portt,'system':system,
         'QDPATTERNS':QDPATTERNS}
         console.log('submit1')
