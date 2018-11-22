@@ -390,7 +390,7 @@ def receive_submit(request):
     cache.set('system',request.GET.get("system"))
     cache.set('colorrange',request.GET.get("colorrange"))
     cache.set('samplingmode',request.GET.get("samplingmode"))
-    cache.set('saclertype',request.GET.get("saclertype"))
+    cache.set('scalertype',request.GET.get("scalertype"))
     cache.set('TX_Video_Timing',request.GET.get("TX_Video_Timing"))
     print('///////')
     print('TX_Video_Timing')
