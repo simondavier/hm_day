@@ -47,7 +47,7 @@ def execute_test(cmdoptions, cmdargs):
     # initialize the port;
     outport = config_d['SutDPS'].split(":")[1]
     #Test Step:
-    #Ignore the test parametres;
+    #Ignore HDMI proctocal test parametres;
     qd.TESTPARAS.remove(cmdoptions.ignore)
     swcregconf.TESTPARAS.remove(cmdoptions.ignore)
     #Initialize QD generator, default:1080p
@@ -74,10 +74,15 @@ def execute_test(cmdoptions, cmdargs):
             log.logger.info("The current input timing is %s" % qdcode)
             #Set input timing
             qd.sent_qd_generator(qdcode)
-            #Check the input timing
-            if check_timing(qd, qdcode, swcregconf, 'input'):
-                INPCOUNT = INPCOUNT+1
-            else:INFCOUNT = INFCOUNT+1
+            #If input skip protocal test
+            if 'protocal' == cmdoptions.skip:
+                pass
+            else:
+                #Check the input timing only
+                if check_timing(qd, qdcode, swcregconf, 'input'):
+                    INPCOUNT = INPCOUNT+1
+                else:INFCOUNT = INFCOUNT+1
+
             #Set Dut switch paraeters, paser "--random";
             if cmdoptions.random != None:
                 time.sleep(int(cmdoptions.interval))
@@ -106,10 +111,22 @@ def execute_test(cmdoptions, cmdargs):
                 #Set QD input port
                 log.logger.info("Set QD analyze port!")
                 set_qd_inputport(qd, outporttype)
-                #Check the output
-                if check_timing(qd,qdcode,swcregconf,'output'):
-                    OUTPCOUNT = OUTPCOUNT+1
-                else:OUTFCOUNT = OUTFCOUNT+1
+                #if output skip protocal test
+                if 'protocal' == cmdoptions.skip:
+                    #check bypass pattern
+                    pass
+                elif 'pattern' == cmdoptions.skip:
+                    #Check the output
+                    if check_timing(qd,qdcode,swcregconf,'output'):
+                        OUTPCOUNT = OUTPCOUNT+1
+                    else:OUTFCOUNT = OUTFCOUNT+1
+                else:
+                    #Check the output
+                    if check_timing(qd,qdcode,swcregconf,'output'):
+                        OUTPCOUNT = OUTPCOUNT+1
+                    else:OUTFCOUNT = OUTFCOUNT+1
+                    #check bypass pattern
+                    pass
             elif 'auto'== cmdoptions.scaletiming: #or 'random'==cmdoptions.scaletiming:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
                 for scalercode in get_timinglist(swcregconf, cmdoptions.scaletiming, 38):
@@ -132,10 +149,25 @@ def execute_test(cmdoptions, cmdargs):
                     set_qd_inputport(qd, outporttype)
                     # write edid
                     write_edid(swcregconf, scalercode, edidfile, qd)
-                    # check output paras
-                    if check_timing(qd,scalercode,swcregconf,'output'):
-                        OUTPCOUNT = OUTPCOUNT+1
-                    else:OUTFCOUNT = OUTFCOUNT+1
+                    # if output skip protocal test
+                    if 'protocal' == cmdoptions.skip:
+                        # check pattern
+                        pass
+                    elif 'pattern' == cmdoptions.skip:
+                        # check output paras
+                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                            OUTPCOUNT = OUTPCOUNT + 1
+                        else:
+                            OUTFCOUNT = OUTFCOUNT + 1
+                    else:
+                        # check output paras
+                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                            OUTPCOUNT = OUTPCOUNT + 1
+                        else:
+                            OUTFCOUNT = OUTFCOUNT + 1
+                        # check pattern
+                        pass
+
             else:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
                 #scalercode = cmdoptions.scaletiming
@@ -165,11 +197,26 @@ def execute_test(cmdoptions, cmdargs):
                     #Set QD input port
                     log.logger.info("Set QD analyze port!")
                     set_qd_inputport(qd, outporttype)
-                    #Check output paras
-                    if check_timing(qd,scalercode,swcregconf,'output'):
-                        OUTPCOUNT = OUTPCOUNT+1
-                    else:OUTFCOUNT = OUTFCOUNT+1
+                    # if output skip protocal test
+                    if 'protocal' == cmdoptions.skip:
+                        # check pattern
+                        pass
+                    elif 'pattern' == cmdoptions.skip:
+                        # check output paras
+                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                            OUTPCOUNT = OUTPCOUNT + 1
+                        else:
+                            OUTFCOUNT = OUTFCOUNT + 1
+                    else:
+                        # check output paras
+                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                            OUTPCOUNT = OUTPCOUNT + 1
+                        else:
+                            OUTFCOUNT = OUTFCOUNT + 1
+                        # check pattern
+                        pass
         repetitions = repetitions-1
+    #Calculate all test result
     log.logger.info("OK,All Test Completed! Total: "+str(INPCOUNT+INFCOUNT+OUTPCOUNT+OUTFCOUNT)+" cases, "\
                     +str(INPCOUNT+OUTPCOUNT)+" was PASS, " +str(INFCOUNT+OUTFCOUNT)+" was FAIL!")
     log.logger.info("INPUT RESULT:"+str(INPCOUNT)+" is PASS, "+str(INFCOUNT)+" is FAIL. "\
@@ -325,6 +372,22 @@ def write_edid(swcregconf, scalercode, edidfile, qd):
     # 4.3 apply edid
     qd.apply_edid()
 
+def process():
+    lineLength = 100
+    delaySeconds = 0.03
+    frontSymbol = '='
+    frontSymbol2 = ['-', '\\', '|', '/']
+    backSymbol = ' '
+    lineTmpla = "{:%s<%s} {} {:<2}" % (backSymbol, lineLength)
+    for j in range(lineLength):
+        tmpSymbol = frontSymbol2[j % (len(frontSymbol2))]
+        print("\r" + lineTmpla.format(frontSymbol * j, tmpSymbol, j), end='')
+        time.sleep(delaySeconds)
+    print("")
+
+def check_pattern():
+    pass
+
 def main():
     """
     :return:
@@ -357,32 +420,23 @@ def main():
     parser.add_option("-r", dest="repetitions", type="string", default="1",help="Set the test loop repetitions")
     parser.add_option("-i", dest="interval", type="string", default="1",help="Set the switch time interval(Uint:second)")
     parser.add_option("--hdcp", dest="hdcp", type="string", default="None",help="Set HDCP.[None | 14 | 22]")
-    parser.add_option("--ignore", dest="ignore", type="string", default="None",help="ignore specified HDMI para, eg:VIC, AR,...")
+    parser.add_option("--ignore", dest="ignore", type="string", default="None",help="Ignore specified HDMI protocal para, eg:VIC, AR,...")
     parser.add_option("--outport", dest="outport", type="string", default='HDMI', \
                                                              help="Set Quantum Device output port.[HDMI | HDBT]")
     parser.add_option("--inport", dest="inport", type="string", default='HDMI', \
                                                              help="Set Quantum Device input port.[HDMI | HDBT]")
     parser.add_option("--random", dest="random", type="string",help=\
                                                             "Random Switch Input/Output.[ input | output | all ]")
+    parser.add_option("--ar", dest="aspectratio", type="string", default ="maintain", help=\
+                                                            "Set AspectRatio .[ maintain | stretch ]")
+    parser.add_option("--skip", dest="skip", type="string", help=\
+                                                            "Skip HDMI Protocal/Pattern Test .[ protocal | pattern ]")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
     options, args = parser.parse_args()
     #if not args:
         #parser.print_help()
         #exit(1)
     execute_test(options, args)
-
-def process():
-    lineLength = 100
-    delaySeconds = 0.03
-    frontSymbol = '='
-    frontSymbol2 = ['-', '\\', '|', '/']
-    backSymbol = ' '
-    lineTmpla = "{:%s<%s} {} {:<2}" % (backSymbol, lineLength)
-    for j in range(lineLength):
-        tmpSymbol = frontSymbol2[j % (len(frontSymbol2))]
-        print("\r" + lineTmpla.format(frontSymbol * j, tmpSymbol, j), end='')
-        time.sleep(delaySeconds)
-    print("")
 
 if __name__=="__main__":
     main()

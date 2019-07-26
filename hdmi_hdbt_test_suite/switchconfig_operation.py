@@ -238,7 +238,7 @@ if __name__ == '__main__':
     #for code in ge:
     #    print (code)
     #timing = sco.getSupportTimingList(37)
-    codes = sco.getSupportTimingList(37)
+    codes = sco.getSupportTimingList(39)
     for code in codes:
         print(code)
         #print(sco.getTimingExpect(code))

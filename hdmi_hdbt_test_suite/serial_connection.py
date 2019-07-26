@@ -72,5 +72,5 @@ class SerialConnection(object):
     
 if __name__ == '__main__':
     fd = SerialConnection()
-    cmd = 'fmtl?'
-    print (fd.send_cmd(cmd))
+    cmd = 'pdax:pval? 480 270'
+    print (fd.send_cmd_ar(cmd))

@@ -693,6 +693,19 @@ class Quantum780Operation(object):
         self.init_compare_frame()
         return self.get_errCount()
 
+    def get_pixel(self, x, y):
+        """
+        Return Pixel color.
+        PDAX:PVAL?
+        :param x: x coordinate
+        :param y: y coordinate
+        :return: a color list with Hex
+        """
+        res = self.sc.send_cmd_ar('PDAX:PVAL? '+str(x)+' '+str(y))
+        print(res)
+        return re.findall(r"0x[\w]+", res)
+
+
     def write_edid_block(self, block, edid):
         """
 
@@ -783,6 +796,8 @@ class Quantum780Operation(object):
 if __name__ == '__main__':
     qdcon = Quantum780Operation()
     #print(qdcon.generator_timing_dump())
-    print(qdcon.get_version())
+    #print(qdcon.get_version())
+    qdcon.init_capture()
+    print(qdcon.get_pixel(480,270))
     #print(qdcon.alyz_timing_dump())
     #print(qdcon.query_pixelErrCount(100))
