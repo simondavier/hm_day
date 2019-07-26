@@ -5,8 +5,8 @@ from openpyxl import *
 import quantum780_operation
 import terminalcolor as tcolor
 
-TESTPARAS = ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT',
-                 'HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
+#TESTPARAS = ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT',
+#                 'HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
 
 class SwitchConfigOperation(object):
 
@@ -16,6 +16,8 @@ class SwitchConfigOperation(object):
         self.wb = load_workbook(filename)
         self.wb.active
         self.mySheet = self.get_sheetNames()[sheetNum]
+        self.TESTPARAS= ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT',
+                 'HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
 
     def saveModify(self, filename):
         self.wb.save(filename)
@@ -97,7 +99,7 @@ class SwitchConfigOperation(object):
         result = {}
         for i in range(1, self.getRowsLenth() + 1):
             if qdcode == self.getCellValue(i, 3):
-                for item in TESTPARAS:
+                for item in self.TESTPARAS:
                     if item == 'HRES':
                         result[item] = str(self.getCellValue(i, 16))
                     elif item == 'VRES':
@@ -191,8 +193,8 @@ class SwitchConfigOperation(object):
         final='PASS'
         for item in expected.keys():
             print("EXPECTED %s is %s and DETECTED %s is %s" % (item, expected[item], item, detected[item]))
-            if item == 'vrat':
-                if abs(float(expected['vrat']) - float(detected['vrat'])) <= 1:
+            if item == 'VRAT':
+                if abs(float(expected['VRAT']) - float(detected['VRAT'])) <= 1:
                     tcolor.cprint('PASS','GREEN')
                 else:
                     tcolor.cprint('FAIL','RED')

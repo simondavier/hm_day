@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+import time
+import random
 import quantum780_operation as qdoperation
 import switchconfig_operation as switchconfig
 import telnet_operation as telnet
-import random
-import os
-import time
-#import logging as log
-#log.basicConfig(filename=logname, filemode="w", level=log.logger.info, format="[%(asctime)s]%(name)s:%(levelname)s:%(message)s")
 import logger as log
 from optparse import OptionParser
 #log.disable(log.logger.info) #disable log
 
 SWITCHCONFIG = "ConfigResolutionData.xlsx"
+INPCOUNT = 0 #count the pass number
+OUTPCOUNT = 0 #count the pass number
+INFCOUNT = 0 #count the fail number
+OUTFCOUNT = 0 #count the fail number
 logname = ".\\log\\" + time.strftime("%Y%m%d_%H%M%S") + ".log"
 log = log.Logger(logname)
 
@@ -24,6 +26,7 @@ def execute_test(cmdoptions, cmdargs):
     :param cmdargs:
     :return:
     """
+    global INPCOUNT, OUTPCOUNT,INFCOUNT,OUTFCOUNT, TESTPARAS, outport, outporttype
     print("Your Test will be start after 3 seconds, please wait...")
     process()
     #Get config from the data sheet:
@@ -35,18 +38,19 @@ def execute_test(cmdoptions, cmdargs):
     tn = telnet.TelnetApp(config_d['MasterIP'],config_d['MasterUsername'],config_d['MasterPassword'])
     log.logger.info("switch_ip:"+config_d['SwitchIP']+"switch_username:"+config_d['SwitchUsername']+"Switch_pwd:" \
               +config_d['SwitchPassword'])
-    tnswitch = telnet.TelnetApp(config_d['SwitchIP'],config_d['SwitchUsername'],config_d['SwitchPassword'])
     swcregconf = switchconfig.SwitchConfigOperation(filename, 0)
     qd = qdoperation.Quantum780Operation()
-    #inportlist = {'HDMI1':'1','HDMI2':'2']
     inportdic = init_port(config_d['InputPortType'])
     log.logger.info("The input port type is:%s."% inportdic)
-    #outportlist = ['HDMI1':'1','HDMI2':'2'}
     outportdic = init_port(config_d['OutputPortType'])
     log.logger.info("The output port type is:%s."% outportdic)
-
+    # initialize the port;
+    outport = config_d['SutDPS'].split(":")[1]
     #Test Step:
-    #Initialize QD generator
+    #Ignore the test parametres;
+    qd.TESTPARAS.remove(cmdoptions.ignore)
+    swcregconf.TESTPARAS.remove(cmdoptions.ignore)
+    #Initialize QD generator, default:1080p
     log.logger.info("Start initialize Quantum Data!")
     qd.sent_qd_generator('1080p60', cmdoptions.patternname, \
                          cmdoptions.colorspace, \
@@ -57,150 +61,215 @@ def execute_test(cmdoptions, cmdargs):
     log.logger.info("Start initialize DUT in/out port!")
     cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outportdic['HDMI1'])
     cmd_sw = ''.join('ci'+outportdic['HDMI1']+'oall')
+    inport = inportdic['HDMI1']
+    inporttype = 'HDMI1'
+    outport = outportdic['HDMI1']
+    outporttype = 'HDMI1'
     tn.send_thor_cmd(config_d['SutDPS'], cmd_dut)
-    tnswitch.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
-    log.logger.info("Testing begin...")
+    tn.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
+    log.logger.info("Hey,Testing Start......")
     repetitions = int(cmdoptions.repetitions)
-    log.logger.info("The inputlist is %s" % get_inputlist(swcregconf, cmdoptions.timing))
     while(repetitions): #execute repetions
-        for qdcode in get_inputlist(swcregconf, cmdoptions.timing):
+        for qdcode in get_timinglist(swcregconf, cmdoptions.timing, 37):
             log.logger.info("The current input timing is %s" % qdcode)
             #Set input timing
             qd.sent_qd_generator(qdcode)
             #Check the input timing
-            check_input_timing(qd,qdcode,swcregconf)
+            if check_timing(qd, qdcode, swcregconf, 'input'):
+                INPCOUNT = INPCOUNT+1
+            else:INFCOUNT = INFCOUNT+1
             #Set Dut switch paraeters, paser "--random";
             if cmdoptions.random != None:
-                time.sleep(cmdoptions.interval)
-                cmd_dut,cmd_sw = rand_switch_port(cmdoptions.random, inportdic, outportdic )
+                time.sleep(int(cmdoptions.interval))
+                cmd_dut,cmd_sw, outport, outporttype, inporttype = rand_switch_port(cmdoptions.random, inportdic, outportdic)
+                log.logger.info("The input port is %s" % inporttype)
+                log.logger.info("The output port is %s" % outporttype)
+                #Check if input port support HDBT Big 4K
+                if is_hdbt_support(cmdoptions,qdcode,inporttype):
+                    pass
+                else:
+                    continue
+                #input support
                 log.logger.info("Switch the DUT port is: %s" % cmd_dut)
                 tn.send_thor_cmd(config_d['SutDPS'], cmd_dut)
                 log.logger.info("Switch the Switch port is: %s" % cmd_sw)
-                tnswitch.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
+                tn.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
             #If bypass, Yes:dectected；Not:set output timing
             if 'bypass' == cmdoptions.scaletiming:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
-                #Set DUT output: bypass；
-                tn.send_thor_cmd(config_d['SutDPS'],'VIDOUT_SCALE-BYPASS')
+                #Set DUT output: bypass；Set port to output
+                if cmdoptions.random != 'None':
+                    newdps = config_d['SutDPS'].replace(":1:",":"+outport+":")
+                    log.logger.info("The new SUT DPS is %s" % newdps)
+                    tn.send_thor_cmd(newdps,'VIDOUT_SCALE-BYPASS')
+                else:tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_SCALE-BYPASS')
                 #Set QD input port
                 log.logger.info("Set QD analyze port!")
-                qd.set_input_signal(0) #HDMI
+                set_qd_inputport(qd, outporttype)
                 #Check the output
-                check_output_timing(qd,qdcode,swcregconf)
-            elif 'all'== cmdoptions.scaletiming or 'random'==cmdoptions.scaletiming:
+                if check_timing(qd,qdcode,swcregconf,'output'):
+                    OUTPCOUNT = OUTPCOUNT+1
+                else:OUTFCOUNT = OUTFCOUNT+1
+            elif 'auto'== cmdoptions.scaletiming: #or 'random'==cmdoptions.scaletiming:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
-                for scalercode in get_outputlist(swcregconf, cmdoptions.scaletiming):
+                for scalercode in get_timinglist(swcregconf, cmdoptions.scaletiming, 38):
+                    #HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
+                    if is_hdbt_support(cmdoptions,scalercode,outporttype):
+                        pass
+                    else:
+                        continue
                     #"for"  set aspect Ratio
-
+                    # To do sth
                     log.logger.info("Set Scaler Out timing to %s!" % scalercode)
                     # set scaler to auto
-                    tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-auto')
+                    if cmdoptions.random != 'None':
+                        newdps = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
+                        log.logger.info("The new SUT DPS is %s" % newdps)
+                        tn.send_thor_cmd(newdps, 'vidout_scale-auto')
+                    else:tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-auto')
                     # set qd input port
                     log.logger.info("Set QD analyze port!")
-                    qd.set_input_signal(0) #input hdmi
+                    set_qd_inputport(qd, outporttype)
                     # write edid
                     write_edid(swcregconf, scalercode, edidfile, qd)
                     # check output paras
-                    check_output_timing(qd,scalercode,swcregconf)
+                    if check_timing(qd,scalercode,swcregconf,'output'):
+                        OUTPCOUNT = OUTPCOUNT+1
+                    else:OUTFCOUNT = OUTFCOUNT+1
             else:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
-                log.logger.info("Set Scaler Out timing to %s!" % cmdoptions.scaletiming)
-                scalercode = cmdoptions.scaletiming
-                # set scaler to manual
-                tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-manual')
-                # set scaler output timing
-                code = swcregconf.getTimingExpect(scalercode)
-                #write edid to sink
-                #write_edid(swcregconf, scalercode, edidfile, qd)
-                #VIDOUT_RES_REF
-                cmd=''.join('VIDOUT_RES_REF-'+code['HRES']+'x'+code['VRES']+','+str(int(float(code['VRAT']))))
-                log.logger.info("The manual scaler timing out is %s" % cmd)
-                tn.send_thor_cmd(config_d['SutDPS'], cmd)
-                #Check output paras
-                check_output_timing(qd,scalercode,swcregconf)
+                #scalercode = cmdoptions.scaletiming
+                for scalercode in get_timinglist(swcregconf, cmdoptions.scaletiming, 38):
+                    # HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
+                    if is_hdbt_support(cmdoptions, scalercode, outporttype):
+                        pass
+                    else:
+                        continue
+                    log.logger.info("Set Scaler Out timing to %s!" % scalercode)
+                    # set scaler to manual
+                    if cmdoptions.random != 'None':
+                        #config_d['SutDPS'] = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
+                        newdps = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
+                        log.logger.info("The new SUT DPS is %s" % newdps)
+                        #tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-manual')
+                        tn.send_thor_cmd(newdps, 'vidout_scale-manual')
+                    else:tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-manual')
+                    # set scaler output timing
+                    code = swcregconf.getTimingExpect(scalercode)
+                    #write edid to sink
+                    #write_edid(swcregconf, scalercode, edidfile, qd)
+                    #VIDOUT_RES_REF
+                    cmd=''.join('VIDOUT_RES_REF-'+code['HRES']+'x'+code['VRES']+','+str(round(float(code['VRAT']))))
+                    log.logger.info("The manual scaler timing out is %s" % cmd)
+                    tn.send_thor_cmd(newdps, cmd)
+                    #Set QD input port
+                    log.logger.info("Set QD analyze port!")
+                    set_qd_inputport(qd, outporttype)
+                    #Check output paras
+                    if check_timing(qd,scalercode,swcregconf,'output'):
+                        OUTPCOUNT = OUTPCOUNT+1
+                    else:OUTFCOUNT = OUTFCOUNT+1
         repetitions = repetitions-1
-    log.logger.info("All Test Completed!")
+    log.logger.info("OK,All Test Completed! Total: "+str(INPCOUNT+INFCOUNT+OUTPCOUNT+OUTFCOUNT)+" cases, "\
+                    +str(INPCOUNT+OUTPCOUNT)+" was PASS, " +str(INFCOUNT+OUTFCOUNT)+" was FAIL!")
+    log.logger.info("INPUT RESULT:"+str(INPCOUNT)+" is PASS, "+str(INFCOUNT)+" is FAIL. "\
+                    "OUTPUT RESULT:"+str(OUTPCOUNT)+" is PASS, "+str(OUTFCOUNT)+" is FAIL")
 
 def init_port(porttype):
+    """
+    Initalize the DUT port
+    :param porttype:
+    :return: a port dic
+    """
     dic = {}
     portlist = porttype.split(',')
     for opt in portlist:
         dic[opt.split(':')[0]] = opt.split(':')[1]
     return dic
 
-def get_inputlist(swconfig, timingmode):
+def is_hdbt_support(cmdoptions, qdcode, porttype):
+    if 'HDBT' in porttype:
+        if qdcode == '2160p50w' or qdcode == '2160p60w':
+            if cmdoptions.colorspace == 'RGB' or cmdoptions.colorspace == 'YCbCr444':
+                log.logger.info("HDBT "+porttype+" can not support 4096x2160@50/60,RGB/YCbCr444!!!")
+                return False
+    return True
+
+def set_qd_inputport(qd, outporttype):
     """
-    Get the input timing list
-    :param swconfig:
-    :param timingmode:
+    Set Quantum input analyzer port
+    :param qd:
+    :param outporttype:
     :return:
     """
-    if 'all' == timingmode:
-        return swconfig.getSupportTimingCode(37)
+    if 'HDMI' in outporttype:
+        qd.set_input_signal(0)
+    elif 'HDBT' in outporttype:
+        qd.set_input_signal(1)
+    else:raise("Quantum only support HDMI/HDBT this port type, please check your config file")
+
+def get_timinglist(swconfig, timingmode, col):
+    if 'all' == timingmode or 'auto' == timingmode or 'manual' == timingmode:
+        return swconfig.getSupportTimingCode(col)
     elif 'random' == timingmode:
-        return random.choice(swconfig.getSupportTimingCode(37)).split()
+        return random.choice(swconfig.getSupportTimingCode(col)).split()
     else:
         return timingmode.split()
 
-def get_outputlist(swconfig, scalemode):
-    """
-    Get the output timing list
-    :param swconfig:
-    :param scalemode:
-    :return:
-    """
-    if 'all' == scalemode:
-        return  swconfig.getSupportTimingCode(39)
-    elif 'random' == scalemode:
-        return random.choice(swconfig.getSupportTimingCode(37)).split()
-    else:
-        return scalemode.split()
-
-def check_input_timing(qd,qdcode,swcregconf):
+def check_timing(qd, qdcode, swcregconf, inout):
     """
     Check the input timing
     :param qd:
     :param qdcode:
     :param swcregconf:
+    :param inout:
     :return:
     """
-    log.logger.info("Get Expected Timing Result!")
-    expect_input = swcregconf.getTimingExpect(qdcode)
-    detect_input = qd.generator_timing_dump()
-    log.logger.info("=The In Expected Para are:=")
-    log.logger.info(expect_input)
-    print("==Input Timing is: " + expect_input['HRES'] + "x" + expect_input['VRES'] + "@" + expect_input[
-        'VRAT'] + "==")
-    print("===================================")
-    print("Input Timing" + expect_input['HRES'] + "x" + expect_input['VRES'] + "@" + expect_input['VRAT'] + " test is %s" \
-          % swcregconf.compare_result(expect_input, detect_input))
-    log.logger.info(
-        "Input Timing" + expect_input['HRES'] + "x" + expect_input['VRES'] + "@" + expect_input['VRAT'] + " test is %s" \
-        % swcregconf.compare_result(expect_input, detect_input))
+    # get expceted paras
+    expect_ioput = swcregconf.getTimingExpect(qdcode)
+    time.sleep(8) # Add debug time to delay analyze.
+    if('input'==inout):
+        if '480i' in qdcode or '576i' in qdcode: #This is a 780E bug in interlace mode.
+            expect_ioput['HTOT'] = str(int(expect_ioput['HTOT'])//2)
+            expect_ioput['HSPD'] = str(int(expect_ioput['HSPD'])//2)
+            expect_ioput['HSPW'] = str(int(expect_ioput['HSPW'])//2)
+            expect_ioput['VTOT'] = str(int(expect_ioput['VTOT'])*2)
+        #log.logger.info("Get Expected Timing Result!")
+        detect_input = qd.generator_timing_dump()
+        log.logger.info("=The %s Expected Para are:=" % inout)
+        log.logger.info(expect_ioput)
+        print("==Input Timing is: " + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput[
+            'VRAT'] + "==")
+        print("===================================")
+        result = swcregconf.compare_result(expect_ioput, detect_input)
+        print("Input Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
+              % result)
+        log.logger.info(
+            "Input Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
+            % result)
+        # if 'PASS'==result:
+        #     return True
+        # else: return False
+    elif('output'==inout):
+        #expect_output = swcregconf.getTimingExpect(qdcode)
+        detect_output = qd.alyz_timing_dump()
+        log.logger.info("=The %s Expected Para are:=" % inout)
+        log.logger.info(expect_ioput)
+        print("==Output Timing is: " + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput[
+            'VRAT'] + "==")
+        print("=====================================")
+        result = swcregconf.compare_result(expect_ioput, detect_output)
+        print("Output Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
+              % result)
+        log.logger.info(
+            "Output Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
+            % result)
+    else:raise ("Wrong I/O, function only support 'input' or 'output', please check! ")
+    if 'PASS' == result:
+        return True
+    else:return False
 
-def check_output_timing(qd,qdcode,swcregconf):
-    """
-    Check the output timing
-    :param qd:
-    :param qdcode:
-    :param swcregconf:
-    :return:
-    """
-    expect_output = swcregconf.getTimingExpect(qdcode)
-    detect_output = qd.alyz_timing_dump()
-    log.logger.info("=The Out Expected Para are:=")
-    log.logger.info(expect_output)
-    print("==Output Timing is: " + expect_output['HRES'] + "x" + expect_output['VRES'] + "@" + expect_output[
-        'VRAT'] + "==")
-    print("=====================================")
-    print("Output Timing" + expect_output['HRES'] + "x" + expect_output['VRES'] + "@" + expect_output[
-        'VRAT'] + " test is %s" \
-          % swcregconf.compare_result(expect_output, detect_output))
-    log.logger.info("Output Timing" + expect_output['HRES'] + "x" + expect_output['VRES'] + "@" + expect_output[
-        'VRAT'] + " test is %s" \
-          % swcregconf.compare_result(expect_output, detect_output))
-
-def rand_switch_port(random, inportdic, outportdic):
+def rand_switch_port(rand, inportdic, outportdic):
     """
     random switch the DUT and Switcher
     :param random:
@@ -208,31 +277,33 @@ def rand_switch_port(random, inportdic, outportdic):
     :param outportdic:
     :return:
     """
-    if 'all' == random:
+    if 'all' == rand:
         #Random switch SUT in port
-        inport = inportdic[random.choice(list(inportdic.keys()))]
-        log.logger.info("The DUT IN port is: %s"%inport)
+        inporttype = random.choice(list(inportdic.keys()))
+        inport = inportdic[inporttype]
         #Random switch SUT out port
-        outport = outportdic[random.choice(list(outportdic.keys()))]
-        log.logger.info("The DUT OUT port is: %s"%outport)
+        outporttype = random.choice(list(outportdic.keys()))
+        outport = outportdic[outporttype]
         cmd_dut = ''.join('ci' + inport + 'o' + outport)
         log.logger.info("Set the DUT port is: %s" % cmd_dut)
         #Set Switch output
         cmd_sw = ''.join('ci'+outport+'oall')
         #log.logger.info("Set the Switch port is: %s" % cmd_sw)
-    elif 'input' == random:
+    elif 'input' == rand:
         # Random switch SUT in port, output default is first port
-        inport = inportdic[random.choice(list(inportdic.keys()))]
+        inporttype = random.choice(list(inportdic.keys()))
+        inport = inportdic[inporttype]
         cmd_dut = ''.join('ci' + inport + 'o' + outportdic['HDMI1'])
         log.logger.info("The DUT IN port is: %s" % inport)
         #No output switch
         log.logger.info("OUTput has no change.")
         # Set Switch output
         cmd_sw = ''
-    elif 'output' == random:
+    elif 'output' == rand:
         #No switch SUT in port, input is the default
         log.logger.info("INput has no change.")
-        outport = outportdic[random.choice(list(outportdic.keys()))]
+        outporttype = random.choice(list(outportdic.keys()))
+        outport = outportdic[outporttype]
         cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outport)
         log.logger.info("The DUT OUT port is: %s" % outport)
         cmd_sw = ''.join('ci' + outport + 'oall')
@@ -240,7 +311,7 @@ def rand_switch_port(random, inportdic, outportdic):
     else:
         cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outportdic['HDMI1'])
         cmd_sw = ''.join('ci' + outportdic['HDMI1'] + 'oall')
-    return cmd_dut, cmd_sw
+    return cmd_dut, cmd_sw, outport, outporttype, inporttype
 
 def write_edid(swcregconf, scalercode, edidfile, qd):
     edid = swcregconf.qdcode2edid(scalercode)
@@ -253,6 +324,7 @@ def write_edid(swcregconf, scalercode, edidfile, qd):
     qd.write_edid_block('1', str(block1))
     # 4.3 apply edid
     qd.apply_edid()
+
 def main():
     """
     :return:
@@ -268,12 +340,13 @@ def main():
                                                             random: random input timing \
                                                             qdcode: the manual timing,eg,2160p30")
 
-    parser.add_option("-s", dest="scaletiming", type="string", default="all",help=\
-                                                            "Set scale output timing.[qdcode | all | bypass | random ].\
-                                                            defalut:all(auto)\
+    parser.add_option("-s", dest="scaletiming", type="string", default="auto",help=\
+                                                            "Set scale output timing.[qdcode | auto | bypass | random ].\
+                                                            defalut:auto\
                                                             bypass: bypass\
-                                                            all: all support scale timing\
+                                                            auto: all support scale timing\
                                                             random: random output timing\
+                                                            manual: manual output timing\
                                                             qdcode: the manual scale timing, eg, 2160p60")
 
 
@@ -284,6 +357,7 @@ def main():
     parser.add_option("-r", dest="repetitions", type="string", default="1",help="Set the test loop repetitions")
     parser.add_option("-i", dest="interval", type="string", default="1",help="Set the switch time interval(Uint:second)")
     parser.add_option("--hdcp", dest="hdcp", type="string", default="None",help="Set HDCP.[None | 14 | 22]")
+    parser.add_option("--ignore", dest="ignore", type="string", default="None",help="ignore specified HDMI para, eg:VIC, AR,...")
     parser.add_option("--outport", dest="outport", type="string", default='HDMI', \
                                                              help="Set Quantum Device output port.[HDMI | HDBT]")
     parser.add_option("--inport", dest="inport", type="string", default='HDMI', \
@@ -292,13 +366,12 @@ def main():
                                                             "Random Switch Input/Output.[ input | output | all ]")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
     options, args = parser.parse_args()
-    if not args:
-        parser.print_help()
-        exit(1)
+    #if not args:
+        #parser.print_help()
+        #exit(1)
     execute_test(options, args)
 
 def process():
-    import time
     lineLength = 100
     delaySeconds = 0.03
     frontSymbol = '='

@@ -25,7 +25,6 @@ class SerialConnection(object):
                 s_port=list(plist[i])
                 str1 =''.join(list(plist[i]))
                 if "Prolific USB-to-Serial Comm Port (" in str1:
-                #if "COM6" in str1:
                     sName = s_port[0]
                     print(sName)
                     return sName
@@ -37,15 +36,12 @@ class SerialConnection(object):
         response = self.fd.read_all().__str__()
         return response
 
-    """def send_cmd(self,cmd):
-        self.fd.write(cmd+'\r')
-        return self.fd.readlines()
-    """
     def send_cmd2(self,cmd):
         #self.fd.write(cmd+'\r')
         self.fd.write(bytes(cmd+'\r', encoding="utf8"))
         return self.fd.readlines()
         #return str(self.fd.readlines(), encoding="utf8")
+
     def send_cmd(self,cmd):
         self.fd.write((cmd+'\r').encode("utf-8"))
         #print("SendCMD:" + cmd)
@@ -76,14 +72,5 @@ class SerialConnection(object):
     
 if __name__ == '__main__':
     fd = SerialConnection()
-    
     cmd = 'fmtl?'
     print (fd.send_cmd(cmd))
-        
-    cmd = 'ifau'
-    print (fd.send_cmd(cmd))
-    
-    cmd = 'ifad? 82'
-    print (fd.send_cmd(cmd))
-    
-    fd.serial_close()

@@ -6,14 +6,15 @@ import re,time
 import logging as log
 log.basicConfig(level=log.DEBUG,format="[%(asctime)s]%(name)s:%(levelname)s:%(message)s")
 
-TESTPARAS = ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT',
-                 'HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
+#TESTPARAS = ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT',
+#                 'HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
 
 class Quantum780Operation(object):
     def __init__(self):
         self.sc = serial.SerialConnection()
         self.alyzDetected={}
         self.geneDetected={}
+        self.TESTPARAS = ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT','HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
 
     def get_version(self):
         """
@@ -198,7 +199,7 @@ class Quantum780Operation(object):
     def hdcp_alyzSwitch(self, opt='2'):
         """
         CPAG
-        Enable/Disable hdcp analyzer
+        Enable/Disable hdcp analyzer(Rx port)
         :param opt:
         0 = disable;
         1 = enable;
@@ -557,7 +558,7 @@ class Quantum780Operation(object):
         :return:
         A dic of all TMAX commands result
         """
-        for item in TESTPARAS:
+        for item in self.TESTPARAS:
             if item == 'VRAT':
                 v = self.sc.send_cmd('VRAT?')
                 self.alyzDetected[item] = ("%.2f" % float(v))
@@ -581,7 +582,7 @@ class Quantum780Operation(object):
             else:
                 cmd = (item + '?')
                 self.alyzDetected[item] = self.sc.send_cmd(cmd)
-        print("============The Out Detected para are:============== ")
+        print("============The Quantum Out Detected para are:============== ")
         print(self.alyzDetected)
         return self.alyzDetected
 
@@ -592,10 +593,10 @@ class Quantum780Operation(object):
         :return:
         A dic of all Generator result
         """
-        time.sleep(4)
+        time.sleep(10)
         self.read_infoframes()
         out = self.sc.send_cmd_ar('IFAD? 82')
-        for item in TESTPARAS:
+        for item in self.TESTPARAS:
             if item == 'AR':
                     #self.geneDetected[item] = "".join(re.findall(r"AR:.*(\d.:\d)", out)[0])
                 self.geneDetected[item] = "".join(re.findall(r".*(\d.:\d)", out))
@@ -605,10 +606,12 @@ class Quantum780Operation(object):
                 continue
             if item == 'VIC':
                 self.geneDetected[item] = "".join(re.findall(r"Video ID:(.*)\(", out)).strip()
+                if '' == self.geneDetected[item]:
+                    self.geneDetected[item]='0'
                 continue
             cmd = ('TMAX:' + item + '?')
             self.geneDetected[item] = self.sc.send_cmd(cmd)
-        print("============The In Detected para are:============== ")
+        print("============The Quantum In Detected para are:============== ")
         print(self.geneDetected)
         return self.geneDetected
 
