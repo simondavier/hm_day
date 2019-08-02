@@ -10,15 +10,18 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
+    <SUITE FILE_PATH="coverage/hdmi_hdbt_test_suite$switchconfig_operation.coverage" NAME="switchconfig_operation Coverage Results" MODIFIED="1564709983707" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hdmi_hdbt_test_suite$serial_connection.coverage" NAME="serial_connection Coverage Results" MODIFIED="1564709998188" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hdmi_hdbt_test_suite$quantum780_operation.coverage" NAME="quantum780_operation Coverage Results" MODIFIED="1564737866712" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hdmi_hdbt_test_suite$VideoTestSuite.coverage" NAME="VideoTestSuite Coverage Results" MODIFIED="1562229431600" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="VideoTestSuite.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="VideoTestSuite.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/VideoTestSuite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-547">
-              <caret line="170" column="48" lean-forward="true" selection-start-line="170" selection-start-column="48" selection-end-line="170" selection-end-column="48" />
+            <state relative-caret-position="-8010">
+              <caret line="209" column="35" lean-forward="true" selection-start-line="209" selection-start-column="35" selection-end-line="209" selection-end-column="35" />
               <folding>
                 <element signature="e#47#56#0" expanded="true" />
               </folding>
@@ -26,20 +29,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="quantum780_operation.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="quantum780_operation.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/quantum780_operation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="354">
-              <caret line="551" column="40" lean-forward="true" selection-start-line="551" selection-start-column="40" selection-end-line="551" selection-end-column="40" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="switchconfig_operation.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/switchconfig_operation.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1683">
-              <caret line="101" column="42" selection-start-line="101" selection-start-column="33" selection-end-line="101" selection-end-column="42" />
+            <state relative-caret-position="266">
+              <caret line="808" column="30" selection-start-line="808" selection-start-column="30" selection-end-line="808" selection-end-column="30" />
             </state>
           </provider>
         </entry>
@@ -54,6 +48,9 @@
       <find>39</find>
       <find>set_input</find>
       <find>SwitchIP</find>
+      <find>pdax</find>
+      <find>pdau</find>
+      <find>vidout_color</find>
     </findStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -63,10 +60,10 @@
         <option value="$PROJECT_DIR$/VideoSwitchTest.py" />
         <option value="$PROJECT_DIR$/telnet_operation.py" />
         <option value="$PROJECT_DIR$/terminalcolor.py" />
-        <option value="$PROJECT_DIR$/serial_connection.py" />
         <option value="$PROJECT_DIR$/switchconfig_operation.py" />
-        <option value="$PROJECT_DIR$/VideoTestSuite.py" />
+        <option value="$PROJECT_DIR$/serial_connection.py" />
         <option value="$PROJECT_DIR$/quantum780_operation.py" />
+        <option value="$PROJECT_DIR$/VideoTestSuite.py" />
       </list>
     </option>
   </component>
@@ -80,10 +77,10 @@
     <packageJsonPaths />
   </component>
   <component name="ProjectFrameBounds" extendedState="7">
-    <option name="x" value="130" />
-    <option name="y" value="280" />
-    <option name="width" value="1350" />
-    <option name="height" value="690" />
+    <option name="x" value="-9" />
+    <option name="y" value="-9" />
+    <option name="width" value="1452" />
+    <option name="height" value="850" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -106,7 +103,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="D:/hm_day/AMX/source/MyTestLibrary" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="configurable.group.editor" />
@@ -123,7 +120,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.quantum780_operation">
     <configuration name="VideoTestSuite" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="hdmi_hdbt_test_suite" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -143,8 +140,74 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <configuration name="quantum780_operation" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="hdmi_hdbt_test_suite" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/quantum780_operation.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="serial_connection" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="hdmi_hdbt_test_suite" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/serial_connection.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="switchconfig_operation" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="hdmi_hdbt_test_suite" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/switchconfig_operation.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.VideoTestSuite" />
+      <item itemvalue="Python.switchconfig_operation" />
+      <item itemvalue="Python.quantum780_operation" />
+      <item itemvalue="Python.serial_connection" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.quantum780_operation" />
+        <item itemvalue="Python.serial_connection" />
+        <item itemvalue="Python.switchconfig_operation" />
         <item itemvalue="Python.VideoTestSuite" />
       </list>
     </recent_temporary>
@@ -171,11 +234,12 @@
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32909605" />
-      <window_info anchor="bottom" id="Terminal" order="7" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.21677852" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.24011299" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.22033899" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15570469" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32909605" />
       <window_info anchor="right" id="SciView" order="3" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -186,7 +250,6 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -195,7 +258,70 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="2" />
+    </breakpoint-manager>
+  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/VideoTestSuite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7310">
+          <caret line="437" column="103" selection-start-line="437" selection-start-column="95" selection-end-line="437" selection-end-column="103" />
+          <folding>
+            <element signature="e#47#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serial_connection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1173">
+          <caret line="72" column="26" lean-forward="true" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/switchconfig_operation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="12" column="40" selection-start-line="12" selection-start-column="40" selection-end-line="12" selection-end-column="40" />
+          <folding>
+            <element signature="e#8299#19998#0" />
+            <element signature="e#8418#9045#0" />
+            <element signature="e#8453#8686#0" />
+            <element signature="e#8766#8999#0" />
+            <element signature="e#9107#9739#0" />
+            <element signature="e#9178#9411#0" />
+            <element signature="e#9506#9739#0" />
+            <element signature="e#9812#10449#0" />
+            <element signature="e#9883#10116#0" />
+            <element signature="e#10216#10449#0" />
+            <element signature="e#10522#11159#0" />
+            <element signature="e#10593#10826#0" />
+            <element signature="e#10926#11159#0" />
+            <element signature="e#11259#11890#0" />
+            <element signature="e#11958#12595#0" />
+            <element signature="e#12668#13305#0" />
+            <element signature="e#13378#14015#0" />
+            <element signature="e#14145#14769#0" />
+            <element signature="e#14847#15485#0" />
+            <element signature="e#15559#16197#0" />
+            <element signature="e#16271#16909#0" />
+            <element signature="e#17001#17630#0" />
+            <element signature="e#17703#18342#0" />
+            <element signature="e#18415#19054#0" />
+            <element signature="e#19127#19766#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/quantum780_operation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="13719">
+          <caret line="807" column="27" selection-start-line="807" selection-start-column="27" selection-end-line="807" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/VideoTestSuite.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="731">
@@ -313,6 +439,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
           <caret line="12" column="31" selection-start-line="12" selection-start-column="31" selection-end-line="12" selection-end-column="31" />
+          <folding>
+            <element signature="e#45#59#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -362,6 +491,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="4" column="28" selection-start-line="4" selection-start-column="28" selection-end-line="4" selection-end-column="28" />
+          <folding>
+            <element signature="e#45#59#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -397,6 +529,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="4" column="28" lean-forward="true" selection-start-line="4" selection-start-column="28" selection-end-line="4" selection-end-column="28" />
+          <folding>
+            <element signature="e#45#59#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -429,6 +564,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="4" column="28" lean-forward="true" selection-start-line="4" selection-start-column="28" selection-end-line="4" selection-end-column="28" />
+          <folding>
+            <element signature="e#45#59#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -448,13 +586,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/serial_connection.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/logger.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
           <caret line="9" column="28" lean-forward="true" selection-start-line="9" selection-start-column="28" selection-end-line="9" selection-end-column="28" />
+          <folding>
+            <element signature="e#45#59#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -467,25 +605,59 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/switchconfig_operation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1683">
-          <caret line="101" column="42" selection-start-line="101" selection-start-column="33" selection-end-line="101" selection-end-column="42" />
+        <state relative-caret-position="-6">
+          <caret line="218" column="63" lean-forward="true" selection-start-line="218" selection-start-column="63" selection-end-line="218" selection-end-column="63" />
+          <folding>
+            <element signature="e#8299#19998#0" />
+            <element signature="e#8418#9045#0" />
+            <element signature="e#8453#8686#0" />
+            <element signature="e#8766#8999#0" />
+            <element signature="e#9107#9739#0" />
+            <element signature="e#9178#9411#0" />
+            <element signature="e#9506#9739#0" />
+            <element signature="e#9812#10449#0" />
+            <element signature="e#9883#10116#0" />
+            <element signature="e#10216#10449#0" />
+            <element signature="e#10522#11159#0" />
+            <element signature="e#10593#10826#0" />
+            <element signature="e#10926#11159#0" />
+            <element signature="e#11259#11890#0" />
+            <element signature="e#11958#12595#0" />
+            <element signature="e#12668#13305#0" />
+            <element signature="e#13378#14015#0" />
+            <element signature="e#14145#14769#0" />
+            <element signature="e#14847#15485#0" />
+            <element signature="e#15559#16197#0" />
+            <element signature="e#16271#16909#0" />
+            <element signature="e#17001#17630#0" />
+            <element signature="e#17703#18342#0" />
+            <element signature="e#18415#19054#0" />
+            <element signature="e#19127#19766#0" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/VideoTestSuite.py">
+    <entry file="file://$PROJECT_DIR$/serial_connection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-547">
-          <caret line="170" column="48" lean-forward="true" selection-start-line="170" selection-start-column="48" selection-end-line="170" selection-end-column="48" />
-          <folding>
-            <element signature="e#47#56#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="419">
+          <caret line="73" column="16" selection-start-line="73" selection-start-column="16" selection-end-line="73" selection-end-column="16" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/quantum780_operation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="354">
-          <caret line="551" column="40" lean-forward="true" selection-start-line="551" selection-start-column="40" selection-end-line="551" selection-end-column="40" />
+        <state relative-caret-position="266">
+          <caret line="808" column="30" selection-start-line="808" selection-start-column="30" selection-end-line="808" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/VideoTestSuite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-8010">
+          <caret line="209" column="35" lean-forward="true" selection-start-line="209" selection-start-column="35" selection-end-line="209" selection-end-column="35" />
+          <folding>
+            <element signature="e#47#56#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

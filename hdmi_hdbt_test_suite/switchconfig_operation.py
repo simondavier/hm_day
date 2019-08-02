@@ -188,7 +188,6 @@ class SwitchConfigOperation(object):
         else:
             raise ("Can not found the qdcode in Resolution Data!")
 
-
     def compare_result(self, expected, detected):
         final='PASS'
         for item in expected.keys():
@@ -217,11 +216,175 @@ class SwitchConfigOperation(object):
                 raise("There is empty value config in file")
         return config
 
+    def getExpectPixelColor(self, inflag, outflag, incolor, outcolor):
+        """
+        Get expect pixel color of white
+        :param inflag: 4k=1, non4k=0
+        :param outflag: 4k=1, non4k=0
+        :param incolor:
+        :param outcolor:
+        :return:
+        """
+        for i in range(1, self.getRowsLenth() + 1):
+            if inflag:
+                if outflag:
+                    if incolor =='RGB':
+                        if outcolor == 'RGB':#1,1,'RGB','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,1,'RGB','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr444':
+                        if outcolor == 'RGB':#1,1,'YCbCr444','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,1,'YCbCr444','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr422':
+                        if outcolor == 'RGB':#1,1,'YCbCr422','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,1,'YCbCr422','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr420':
+                        if outcolor == 'RGB':#1,1,'YCbCr420','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,1,'YCbCr420','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    else:raise ("Unknown colorspace")
+                elif not outflag:
+                    if incolor =='RGB':
+                        if outcolor == 'RGB':#1,0,'RGB','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,0,'RGB','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr444':
+                        if outcolor == 'RGB':#1,0,'YCbCr444','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,0,'YCbCr444','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr422':
+                        if outcolor == 'RGB':#1,0,'YCbCr422','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,0,'YCbCr422','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr420':
+                        if outcolor == 'RGB':#1,0,'YCbCr420','RGB'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,0,'YCbCr420','YCbCr444'
+                            if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    else:raise ("Unknown colorspace")
+            elif not inflag:
+                if outflag:
+                    if incolor =='RGB':
+                        if outcolor == 'RGB':#0,1,'RGB','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,1,'RGB','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr444':
+                        if outcolor == 'RGB':#0,1,'YCbCr444','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,1,'YCbCr444','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr422':
+                        if outcolor == 'RGB':#0,1,'YCbCr422','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #1,1,'YCbCr422','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr420':
+                        if outcolor == 'RGB':#0,1,'YCbCr420','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,1,'YCbCr420','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    else:raise ("Unknown colorspace")
+                elif not outflag:
+                    if incolor =='RGB':
+                        if outcolor == 'RGB':#0,0,'RGB','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,0,'RGB','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr444':
+                        if outcolor == 'RGB':#0,0,'YCbCr444','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,0,'YCbCr444','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr422':
+                        if outcolor == 'RGB':#0,0,'YCbCr422','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,0,'YCbCr422','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    elif incolor == 'YCbCr420':
+                        if outcolor == 'RGB':#0,0,'YCbCr420','RGB'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                        else:               #0,0,'YCbCr420','YCbCr444'
+                            if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
+                                and self.getCellValue(i,4)==outcolor:
+                                return self.getCellValue(i, 7)
+                    else:raise ("Unknown colorspace")
 
 if __name__ == '__main__':
-    filename = "D:\\TestStandDemo\\VideoSwtich\\ConfigResolutionData.xlsx"
+    filename = "D:\hdmi_hdbt_test_suite\\ConfigResolutionData.xlsx"
     edid = "D:\\TestStandDemo\\VideoSwtich\\QdEDID.xlsx"
-    sco = SwitchConfigOperation(filename,0)
+    sco = SwitchConfigOperation(filename,2)
     #edidobj = SwitchConfigOperation(edid)
     # sheetName = sco.get_sheetNames()
     # print(sheetName)
@@ -238,9 +401,9 @@ if __name__ == '__main__':
     #for code in ge:
     #    print (code)
     #timing = sco.getSupportTimingList(37)
-    codes = sco.getSupportTimingList(39)
-    for code in codes:
-        print(code)
+    #black, white = sco.getPixelColor('YCbCr444', 1)
+    print("white is:"+sco.getPixelColor(0,0,'YCbCr420','YCbCr444'))
+    #print(sco.getCellValue(2,1))
         #print(sco.getTimingExpect(code))
     #print(sco.getEdid('1080p60','0'))
     #print(sco.getEdid('1024x576','1'))

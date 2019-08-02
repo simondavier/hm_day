@@ -4,6 +4,7 @@
 import os
 import time
 import random
+import re
 import quantum780_operation as qdoperation
 import switchconfig_operation as switchconfig
 import telnet_operation as telnet
@@ -28,7 +29,7 @@ def execute_test(cmdoptions, cmdargs):
     """
     global INPCOUNT, OUTPCOUNT,INFCOUNT,OUTFCOUNT, TESTPARAS, outport, outporttype
     print("Your Test will be start after 3 seconds, please wait...")
-    process()
+    loadProcess()
     #Get config from the data sheet:
     config_d = switchconfig.SwitchConfigOperation(SWITCHCONFIG, 1).load_config()
     log.logger.info(config_d)
@@ -39,17 +40,19 @@ def execute_test(cmdoptions, cmdargs):
     log.logger.info("switch_ip:"+config_d['SwitchIP']+"switch_username:"+config_d['SwitchUsername']+"Switch_pwd:" \
               +config_d['SwitchPassword'])
     swcregconf = switchconfig.SwitchConfigOperation(filename, 0)
+    swcolorconfig = switchconfig.SwitchConfigOperation(filename, 2)
     qd = qdoperation.Quantum780Operation()
-    inportdic = init_port(config_d['InputPortType'])
+    inportdic = initPort(config_d['InputPortType'])
     log.logger.info("The input port type is:%s."% inportdic)
-    outportdic = init_port(config_d['OutputPortType'])
+    outportdic = initPort(config_d['OutputPortType'])
     log.logger.info("The output port type is:%s."% outportdic)
     # initialize the port;
     outport = config_d['SutDPS'].split(":")[1]
     #Test Step:
     #Ignore HDMI proctocal test parametres;
-    qd.TESTPARAS.remove(cmdoptions.ignore)
-    swcregconf.TESTPARAS.remove(cmdoptions.ignore)
+    if cmdoptions.ignore:
+        qd.TESTPARAS.remove(cmdoptions.ignore)
+        swcregconf.TESTPARAS.remove(cmdoptions.ignore)
     #Initialize QD generator, default:1080p
     log.logger.info("Start initialize Quantum Data!")
     qd.sent_qd_generator('1080p60', cmdoptions.patternname, \
@@ -59,19 +62,30 @@ def execute_test(cmdoptions, cmdargs):
                          cmdoptions.hdcp)
     #Initialize SUT default input and output
     log.logger.info("Start initialize DUT in/out port!")
-    cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outportdic['HDMI1'])
-    cmd_sw = ''.join('ci'+outportdic['HDMI1']+'oall')
     inport = inportdic['HDMI1']
     inporttype = 'HDMI1'
     outport = outportdic['HDMI1']
     outporttype = 'HDMI1'
+    cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outportdic['HDMI1'])
+    # Set Switch output
+    switchport = "".join(re.findall(r"\d", outporttype))
+    cmd_sw = ''.join('ci' + switchport + 'oall')
+    print("11111111111===="+cmd_sw)
     tn.send_thor_cmd(config_d['SutDPS'], cmd_dut)
     tn.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
     log.logger.info("Hey,Testing Start......")
     repetitions = int(cmdoptions.repetitions)
-    while(repetitions): #execute repetions
-        for qdcode in get_timinglist(swcregconf, cmdoptions.timing, 37):
+    ar = cmdoptions.aspectratio
+    incolor = cmdoptions.colorspace
+    outcolor = cmdoptions.outcolorspace
+    aspectratio = cmdoptions.aspectratio
+
+    # Execute repetions
+    while(repetitions):
+        for qdcode in getTimingList(swcregconf, cmdoptions.timing, 37):
             log.logger.info("The current input timing is %s" % qdcode)
+            # Get the input code to get h,v
+            incode= swcregconf.getTimingExpect(qdcode)
             #Set input timing
             qd.sent_qd_generator(qdcode)
             #If input skip protocal test
@@ -79,18 +93,18 @@ def execute_test(cmdoptions, cmdargs):
                 pass
             else:
                 #Check the input timing only
-                if check_timing(qd, qdcode, swcregconf, 'input'):
+                if checkTiming(qd, qdcode, swcregconf, 'input'):
                     INPCOUNT = INPCOUNT+1
                 else:INFCOUNT = INFCOUNT+1
 
             #Set Dut switch paraeters, paser "--random";
             if cmdoptions.random != None:
                 time.sleep(int(cmdoptions.interval))
-                cmd_dut,cmd_sw, outport, outporttype, inporttype = rand_switch_port(cmdoptions.random, inportdic, outportdic)
+                cmd_dut,cmd_sw, outport, outporttype, inporttype = randSwitchPort(cmdoptions.random, inportdic, outportdic)
                 log.logger.info("The input port is %s" % inporttype)
                 log.logger.info("The output port is %s" % outporttype)
                 #Check if input port support HDBT Big 4K
-                if is_hdbt_support(cmdoptions,qdcode,inporttype):
+                if isHdbtSupport(cmdoptions, qdcode, inporttype):
                     pass
                 else:
                     continue
@@ -110,111 +124,153 @@ def execute_test(cmdoptions, cmdargs):
                 else:tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_SCALE-BYPASS')
                 #Set QD input port
                 log.logger.info("Set QD analyze port!")
-                set_qd_inputport(qd, outporttype)
-                #if output skip protocal test
+                setQdInputport(qd, outporttype)
+                # HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
+                if isHdbtSupport(cmdoptions, qdcode, outporttype):
+                    pass
+                else:
+                    continue
+                #If output skip protocal/pattern test
                 if 'protocal' == cmdoptions.skip:
                     #check bypass pattern
-                    pass
+                    pixelcount = qd.query_pixelErrCount(100)
+                    if pixelcount:
+                        print("Bypass no pixel error, pass")
+                    else:
+                        print("Bypass has %s pixel error!" % pixelcount)
                 elif 'pattern' == cmdoptions.skip:
                     #Check the output
-                    if check_timing(qd,qdcode,swcregconf,'output'):
+                    if checkTiming(qd, qdcode, swcregconf, 'output'):
                         OUTPCOUNT = OUTPCOUNT+1
                     else:OUTFCOUNT = OUTFCOUNT+1
                 else:
                     #Check the output
-                    if check_timing(qd,qdcode,swcregconf,'output'):
+                    if checkTiming(qd, qdcode, swcregconf, 'output'):
                         OUTPCOUNT = OUTPCOUNT+1
                     else:OUTFCOUNT = OUTFCOUNT+1
                     #check bypass pattern
-                    pass
+                    pixelcount = qd.query_pixelErrCount(100)
+                    if pixelcount:
+                        print("Bypass no pixel error, pass")
+                    else:
+                        print("Bypass has %s pixel error!" % pixelcount)
             elif 'auto'== cmdoptions.scaletiming: #or 'random'==cmdoptions.scaletiming:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
-                for scalercode in get_timinglist(swcregconf, cmdoptions.scaletiming, 38):
+                for scalercode in getTimingList(swcregconf, cmdoptions.scaletiming, 38):
                     #HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
-                    if is_hdbt_support(cmdoptions,scalercode,outporttype):
+                    if isHdbtSupport(cmdoptions, scalercode, outporttype):
                         pass
                     else:
                         continue
-                    #"for"  set aspect Ratio
-                    # To do sth
+
                     log.logger.info("Set Scaler Out timing to %s!" % scalercode)
                     # set scaler to auto
                     if cmdoptions.random != 'None':
                         newdps = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
                         log.logger.info("The new SUT DPS is %s" % newdps)
                         tn.send_thor_cmd(newdps, 'vidout_scale-auto')
-                    else:tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-auto')
+                    else:
+                        newdps = config_d['SutDPS']
+                        tn.send_thor_cmd(newdps, 'vidout_scale-auto')
+                    #"for"  set aspect Ratio
+                    arcmd='vidout_aspect_ratio-'+ar
+                    tn.send_thor_cmd(newdps, arcmd)
+                    log.logger.info("Set aspectratio to %s !" % ar)
+                    #set output colorspace
+                    cscmd = 'vidout_color_space-'+outcolor
+                    tn.send_thor_cmd(newdps, cscmd)
+                    log.logger.info("Set output colorspace to %s !" % outcolor)
+                    #get the output timing code to get h,v;
+                    outcode = swcregconf.getTimingExpect(scalercode)
                     # set qd input port
                     log.logger.info("Set QD analyze port!")
-                    set_qd_inputport(qd, outporttype)
+                    setQdInputport(qd, outporttype)
                     # write edid
-                    write_edid(swcregconf, scalercode, edidfile, qd)
+                    writeEdid(swcregconf, scalercode, edidfile, qd)
                     # if output skip protocal test
                     if 'protocal' == cmdoptions.skip:
                         # check pattern
-                        pass
+                        #checkPattern(qd, incode, outcode, swcregconf, ar, colorspace, swcolorconfig)
+                        checkPattern(qd, qdcode, scalercode, incode, outcode, aspectratio, incolor, outcolor, swcolorconfig,
+                                     colorimetry='auto')
                     elif 'pattern' == cmdoptions.skip:
                         # check output paras
-                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                        if checkTiming(qd, scalercode, swcregconf, 'output'):
                             OUTPCOUNT = OUTPCOUNT + 1
                         else:
                             OUTFCOUNT = OUTFCOUNT + 1
                     else:
                         # check output paras
-                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                        if checkTiming(qd, scalercode, swcregconf, 'output'):
                             OUTPCOUNT = OUTPCOUNT + 1
                         else:
                             OUTFCOUNT = OUTFCOUNT + 1
                         # check pattern
-                        pass
+                        #checkPattern(qd, incode, outcode, swcregconf, ar, colorspace, swcolorconfig)
+                        checkPattern(qd, qdcode, scalercode, incode, outcode, aspectratio, incolor, outcolor, swcolorconfig,
+                                     colorimetry='auto')
 
             else:
                 log.logger.info("The scaler mode is %s" % cmdoptions.scaletiming)
                 #scalercode = cmdoptions.scaletiming
-                for scalercode in get_timinglist(swcregconf, cmdoptions.scaletiming, 38):
+                for scalercode in getTimingList(swcregconf, cmdoptions.scaletiming, 38):
                     # HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
-                    if is_hdbt_support(cmdoptions, scalercode, outporttype):
+                    if isHdbtSupport(cmdoptions, scalercode, outporttype):
                         pass
                     else:
                         continue
                     log.logger.info("Set Scaler Out timing to %s!" % scalercode)
                     # set scaler to manual
                     if cmdoptions.random != 'None':
-                        #config_d['SutDPS'] = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
+                        #config_d['SutDPS'] = config_d['SutDPS'].replace(":1:", ":" + outport + ":") need know why not?
                         newdps = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
                         log.logger.info("The new SUT DPS is %s" % newdps)
                         #tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-manual')
                         tn.send_thor_cmd(newdps, 'vidout_scale-manual')
-                    else:tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-manual')
+                    else:
+                        newdps = config_d['SutDPS']
+                        tn.send_thor_cmd(newdps, 'vidout_scale-manual')
+                    #"for"  set aspect Ratio
+                    arcmd='vidout_aspect_ratio-'+ar
+                    tn.send_thor_cmd(newdps, arcmd)
+                    log.logger.info("Set aspectratio to %s !" % ar)
+                    #set output colorspac
+                    cscmd = 'vidout_color_space-'+outcolor
+                    tn.send_thor_cmd(newdps, cscmd)
+                    log.logger.info("Set output colorspace to %s !" % outcolor)
                     # set scaler output timing
-                    code = swcregconf.getTimingExpect(scalercode)
+                    outcode = swcregconf.getTimingExpect(scalercode)
                     #write edid to sink
-                    #write_edid(swcregconf, scalercode, edidfile, qd)
+                    #writeEdid(swcregconf, scalercode, edidfile, qd)
                     #VIDOUT_RES_REF
-                    cmd=''.join('VIDOUT_RES_REF-'+code['HRES']+'x'+code['VRES']+','+str(round(float(code['VRAT']))))
+                    cmd=''.join('VIDOUT_RES_REF-'+outcode['HRES']+'x'+outcode['VRES']+','+str(round(float(outcode['VRAT']))))
                     log.logger.info("The manual scaler timing out is %s" % cmd)
                     tn.send_thor_cmd(newdps, cmd)
                     #Set QD input port
                     log.logger.info("Set QD analyze port!")
-                    set_qd_inputport(qd, outporttype)
+                    setQdInputport(qd, outporttype)
                     # if output skip protocal test
                     if 'protocal' == cmdoptions.skip:
                         # check pattern
-                        pass
+                        #checkPattern(qd, incode, outcode, swcregconf, ar, colorspace, swcolorconfig)
+                        checkPattern(qd, qdcode, scalercode, incode, outcode, aspectratio, incolor, outcolor, swcolorconfig,
+                                     colorimetry='auto')
                     elif 'pattern' == cmdoptions.skip:
                         # check output paras
-                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                        if checkTiming(qd, scalercode, swcregconf, 'output'):
                             OUTPCOUNT = OUTPCOUNT + 1
                         else:
                             OUTFCOUNT = OUTFCOUNT + 1
                     else:
                         # check output paras
-                        if check_timing(qd, scalercode, swcregconf, 'output'):
+                        if checkTiming(qd, scalercode, swcregconf, 'output'):
                             OUTPCOUNT = OUTPCOUNT + 1
                         else:
                             OUTFCOUNT = OUTFCOUNT + 1
                         # check pattern
-                        pass
+                            #checkPattern(qd, incode, outcode, swcregconf, ar, colorspace, swcolorconfig)
+                        checkPattern(qd, qdcode, scalercode, incode, outcode, aspectratio, incolor, outcolor, swcolorconfig,
+                                     colorimetry='auto')
         repetitions = repetitions-1
     #Calculate all test result
     log.logger.info("OK,All Test Completed! Total: "+str(INPCOUNT+INFCOUNT+OUTPCOUNT+OUTFCOUNT)+" cases, "\
@@ -222,7 +278,7 @@ def execute_test(cmdoptions, cmdargs):
     log.logger.info("INPUT RESULT:"+str(INPCOUNT)+" is PASS, "+str(INFCOUNT)+" is FAIL. "\
                     "OUTPUT RESULT:"+str(OUTPCOUNT)+" is PASS, "+str(OUTFCOUNT)+" is FAIL")
 
-def init_port(porttype):
+def initPort(porttype):
     """
     Initalize the DUT port
     :param porttype:
@@ -234,7 +290,7 @@ def init_port(porttype):
         dic[opt.split(':')[0]] = opt.split(':')[1]
     return dic
 
-def is_hdbt_support(cmdoptions, qdcode, porttype):
+def isHdbtSupport(cmdoptions, qdcode, porttype):
     if 'HDBT' in porttype:
         if qdcode == '2160p50w' or qdcode == '2160p60w':
             if cmdoptions.colorspace == 'RGB' or cmdoptions.colorspace == 'YCbCr444':
@@ -242,7 +298,7 @@ def is_hdbt_support(cmdoptions, qdcode, porttype):
                 return False
     return True
 
-def set_qd_inputport(qd, outporttype):
+def setQdInputport(qd, outporttype):
     """
     Set Quantum input analyzer port
     :param qd:
@@ -255,7 +311,7 @@ def set_qd_inputport(qd, outporttype):
         qd.set_input_signal(1)
     else:raise("Quantum only support HDMI/HDBT this port type, please check your config file")
 
-def get_timinglist(swconfig, timingmode, col):
+def getTimingList(swconfig, timingmode, col):
     if 'all' == timingmode or 'auto' == timingmode or 'manual' == timingmode:
         return swconfig.getSupportTimingCode(col)
     elif 'random' == timingmode:
@@ -263,14 +319,14 @@ def get_timinglist(swconfig, timingmode, col):
     else:
         return timingmode.split()
 
-def check_timing(qd, qdcode, swcregconf, inout):
+def checkTiming(qd, qdcode, swcregconf, inout):
     """
     Check the input timing
     :param qd:
     :param qdcode:
     :param swcregconf:
     :param inout:
-    :return:
+    :return: boolean
     """
     # get expceted paras
     expect_ioput = swcregconf.getTimingExpect(qdcode)
@@ -316,7 +372,209 @@ def check_timing(qd, qdcode, swcregconf, inout):
         return True
     else:return False
 
-def rand_switch_port(rand, inportdic, outportdic):
+def checkPattern(qd, qdincode, qdoutcode, incode, outcode, aspectratio, incolor, outcolor, swcolorconfig, colorimetry='auto'):
+    """
+
+    :param qd: Quantum obj
+    :param incode: input paras dic
+    :param outcode: output paras dic
+    :param ar: AspectRatio, maintain, stretch
+    :param colorspace: RGB/YCbCr444/YCbCr422/YCbCr420
+    :param swColorConfig: get colorspace expect paras
+    :param colorimetry: set colorimetry under YCbCr mode(Auto BT601, BT709, BT2020)
+    :return: Boolean
+    """
+    expect_input = incode
+    expect_output = outcode
+    if 'stretch' == aspectratio:
+        #check outcode
+        h= expect_output['HRES'] #output hres
+        v= expect_output['VRES'] #output vres
+        print(expect_input['VRES'])
+        print(expect_input['VRAT'])
+        print(expect_output['VRES'])
+        print(expect_output['VRAT'])
+        #if 4K, 4K capture was not support by 780E
+        print("h is :"+str(h))
+        print("v is :" + str(v))
+        if '2160p50' in qdincode or '2160p60' in qdincode:
+            if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
+                log.logger.info("Both In/Out are 4K")
+                desarea = calculateBox(1, 1, qd, h, v, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(1, h, v, desarea):
+                    return True
+                else:return False
+            else:
+                log.logger.info("In is 4K, Out not 4K")
+                desarea = calculateBox(1, 0, qd, h, v, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(0, h, v, desarea):
+                    return True
+                else:return False
+        else:
+            if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
+                log.logger.info("In not 4K, Out is 4K")
+                desarea = calculateBox(0, 1, qd, h, v, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(1, h, v, desarea):
+                    return True
+                else:return False
+            else:
+                log.logger.info("Both are not 4K")
+                desarea = calculateBox(0, 0, qd, h, v, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(0, h, v, desarea):
+                    return True
+                else:return False
+    elif 'maintain' == aspectratio:
+        #to do sth
+        pass
+    else:
+        raise ("Unsupport aspectration was set.")
+
+def compareArea(outflag, h, v, desarea):
+    """
+    Copare black box area;
+    :param h: src width
+    :param v: src hight
+    :return:boolean
+    """
+    x = int(h)
+    y = int(v)
+    # this "if" according to 780E can not support 4K capture
+    if outflag:
+        x = round(x/2)
+        y = round(y/2)
+    srcarea = round((y*x)/4)
+    print("The source area is:%s" % str(srcarea))
+    factor = ("%.2f" % float(srcarea/desarea))
+    print("The factor is :"+ str(factor))
+    #compare black box
+    if factor == "1.00" or factor == "0.99":
+        print("the 2 area is equal!")
+        return True
+    else:
+        print("2 area is not equal!")
+        return False
+
+
+def getExpectColor(swcolorconfig, inflag, outflag, incolor, outcolor):
+    """
+    Get expect color
+    :param swcolorconfig:
+    :param inflag: if 4k, 4k=1, non4k=0
+    :param outflag: if 4k, 4k=1, non4k=0
+    :param incolor:
+    :param outcolor:
+    :return: white color
+    """
+    return swcolorconfig.getExpectPixelColor(inflag,outflag,incolor,outcolor)
+
+def compColor(expcolor, pcolor):
+    """
+    Compare 2 Hex str color
+    "[0xFF, 0xFF, 0xFF]"
+    :param expcolor:
+    :param pcolor:
+    :return: boolean
+    """
+    expcolor = re.findall(r"0x\w+", expcolor)
+    pcolor = re.findall(r"0x\w+", pcolor)
+    for i in range(len(pcolor)):
+        pcolor[i]=int(pcolor[i],16)
+        expcolor[i]=int(expcolor[i],16)
+    print(expcolor)
+    print(pcolor)
+    for i in range(len(pcolor)):
+        if abs(pcolor[i]-expcolor[i])<=2:
+            return True
+        else:return False
+
+
+def calculateBox(inflag, outflag, qd, h, v, incolor, outcolor, swcolorconfig):
+    """
+    Calculate black/white points of the pattern.
+    :param inflag: if 4K, flag =1;
+    :param outflag: if 4K, flag =1;
+    :param qd;
+    :param h;
+    :param v;
+    :param incolor;
+    :param outcolor;
+    :param swcolorconfig;
+    :return: black box area;
+    """
+    x = int(h)
+    y = int(v)
+    # this "if" according to 780E can not support 4K capture
+    if outflag:
+        x = round(x/2)
+        #y = round(y/2)
+
+    #get the expect color
+    expcolor = getExpectColor(swcolorconfig, inflag, outflag, incolor, outcolor)
+    #print("The expect color is :"+expcolor)
+    #init pixel analyzer
+    print(qd.get_format())
+    qd.init_capture()
+    qd.cap_frame(100)
+    qd.init_compare_frame()
+    qd.query_pixelErrCount(100)
+    #get the ynorth
+    xcenter = round(x/2)
+    ycenter=round((y/4)+10)
+    while ycenter > 0:
+        pcolor = qd.get_pixel(str(xcenter), str(ycenter))
+        print("The pixel color is %s"% pcolor)
+        print("The expet color is %s"% expcolor)
+        if compColor(expcolor, pcolor):
+           ynorth = ycenter
+           break
+        else:
+            print("not equal!")
+        ycenter=ycenter-1
+    #get the ysouth
+    xcenter = round(x/2)
+    ycenter=round((y/4)*3-10)
+    while ycenter < y:
+        pcolor = qd.get_pixel(str(xcenter), str(ycenter))
+        print(pcolor)
+        if compColor(expcolor, pcolor):
+            ysouth = ycenter
+            break
+        ycenter=ycenter+1
+    #get the xwest
+    xcenter=round((x/4)+10)
+    ycenter = round(y/2)
+    while xcenter > 0:
+        pcolor = qd.get_pixel(str(xcenter), str(ycenter))
+        print(pcolor)
+        if compColor(expcolor, pcolor):
+            xwest = xcenter
+            break
+        xcenter=xcenter-1
+    #get the xeast
+    xcenter=round((x/4)*3-10)
+    ycenter = round(y/2)
+    while xcenter < x:
+        pcolor = qd.get_pixel(str(xcenter), str(ycenter))
+        print(pcolor)
+        if compColor(expcolor, pcolor):
+            xeast = xcenter
+            break
+        xcenter=xcenter+1
+    hight = ysouth - ynorth
+    width = xeast - xwest
+    print("the black box hight is:"+str(hight))
+    print("the black box width is:"+str(width))
+    return hight*width
+
+def randSwitchPort(rand, inportdic, outportdic):
     """
     random switch the DUT and Switcher
     :param random:
@@ -334,7 +592,8 @@ def rand_switch_port(rand, inportdic, outportdic):
         cmd_dut = ''.join('ci' + inport + 'o' + outport)
         log.logger.info("Set the DUT port is: %s" % cmd_dut)
         #Set Switch output
-        cmd_sw = ''.join('ci'+outport+'oall')
+        switchport = "".join(re.findall(r"\d",outporttype))
+        cmd_sw = ''.join('ci'+switchport+'oall')
         #log.logger.info("Set the Switch port is: %s" % cmd_sw)
     elif 'input' == rand:
         # Random switch SUT in port, output default is first port
@@ -353,14 +612,18 @@ def rand_switch_port(rand, inportdic, outportdic):
         outport = outportdic[outporttype]
         cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outport)
         log.logger.info("The DUT OUT port is: %s" % outport)
-        cmd_sw = ''.join('ci' + outport + 'oall')
+        #Set Switch output
+        switchport = "".join(re.findall(r"\d",outporttype))
+        cmd_sw = ''.join('ci'+switchport+'oall')
         #log.logger.info("Set the Switch port is: %s" % cmd_sw)
     else:
         cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outportdic['HDMI1'])
-        cmd_sw = ''.join('ci' + outportdic['HDMI1'] + 'oall')
+        #Set Switch output
+        switchport = "".join(re.findall(r"\d",'HDMI1'))
+        cmd_sw = ''.join('ci'+switchport+'oall')
     return cmd_dut, cmd_sw, outport, outporttype, inporttype
 
-def write_edid(swcregconf, scalercode, edidfile, qd):
+def writeEdid(swcregconf, scalercode, edidfile, qd):
     edid = swcregconf.qdcode2edid(scalercode)
     log.logger.info("The new edid is:" + edid)
     edidobj = switchconfig.SwitchConfigOperation(edidfile, 0)
@@ -372,7 +635,7 @@ def write_edid(swcregconf, scalercode, edidfile, qd):
     # 4.3 apply edid
     qd.apply_edid()
 
-def process():
+def loadProcess():
     lineLength = 100
     delaySeconds = 0.03
     frontSymbol = '='
@@ -385,17 +648,14 @@ def process():
         time.sleep(delaySeconds)
     print("")
 
-def check_pattern():
-    pass
-
 def main():
     """
     :return:
     """
     usage = "usage: %prog [options] args"
     parser = OptionParser(usage)
-    parser.add_option("-p", dest="patternname", default="colorbar", type="string", help="set test pattern.\
-                                                                                        default:colorbar")
+    parser.add_option("-p", dest="patternname", default="Halation", type="string", help="set Quantum test pattern.\
+                                                                                        default:halation")
     parser.add_option("-t", dest="timing", type="string", default="1080p60",help=\
                                                             "Set input timing[qdcode | all | random]\
                                                             default: 1080p60\
@@ -411,26 +671,27 @@ def main():
                                                             random: random output timing\
                                                             manual: manual output timing\
                                                             qdcode: the manual scale timing, eg, 2160p60")
-
-
     parser.add_option("-c", dest="colorspace", type="string", default="YCbCr444",help=\
-                                                            "Set colorspace.[ RGB | YCbCr444 | YCbCr422 | YCbCr420]\
+                                                            "Set Quantum colorspace.[ RGB | YCbCr444 | YCbCr422 | YCbCr420]\
                                                             defalut:RGB")
-    parser.add_option("-d", dest="deepcolor", type="string", default="8",help="Set deepcolor.[8 | 10 | 12]")
+    parser.add_option("-d", dest="deepcolor", type="string", default="8",help="Set Quantum deepcolor.[8 | 10 | 12]")
     parser.add_option("-r", dest="repetitions", type="string", default="1",help="Set the test loop repetitions")
-    parser.add_option("-i", dest="interval", type="string", default="1",help="Set the switch time interval(Uint:second)")
-    parser.add_option("--hdcp", dest="hdcp", type="string", default="None",help="Set HDCP.[None | 14 | 22]")
+    parser.add_option("-i", dest="interval", type="string", default="1",help="Set DUT switch time interval(Uint:second)")
+    parser.add_option("--hdcp", dest="hdcp", type="string", default="None",help="Set Quantum out HDCP.[None | 14 | 22]")
     parser.add_option("--ignore", dest="ignore", type="string", default="None",help="Ignore specified HDMI protocal para, eg:VIC, AR,...")
     parser.add_option("--outport", dest="outport", type="string", default='HDMI', \
                                                              help="Set Quantum Device output port.[HDMI | HDBT]")
     parser.add_option("--inport", dest="inport", type="string", default='HDMI', \
                                                              help="Set Quantum Device input port.[HDMI | HDBT]")
     parser.add_option("--random", dest="random", type="string",help=\
-                                                            "Random Switch Input/Output.[ input | output | all ]")
-    parser.add_option("--ar", dest="aspectratio", type="string", default ="maintain", help=\
-                                                            "Set AspectRatio .[ maintain | stretch ]")
+                                                            "Random Switch Input/Output ports.[ input | output | all ]")
+    parser.add_option("--ar", dest="aspectratio", type="string", default ="stretch", help=\
+                                                            "Set DUT AspectRatio, default is stretch .[ maintain | stretch ]")
     parser.add_option("--skip", dest="skip", type="string", help=\
                                                             "Skip HDMI Protocal/Pattern Test .[ protocal | pattern ]")
+    parser.add_option("--outcolor", dest="outcolorspace", type="string", default="RGB",help=\
+                                                            "Set Quantum colorspace.[ RGB | YCbCr444]\
+                                                            defalut:RGB")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
     options, args = parser.parse_args()
     #if not args:

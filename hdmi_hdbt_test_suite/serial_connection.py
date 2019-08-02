@@ -31,8 +31,7 @@ class SerialConnection(object):
     
     def send_cmd1(self,cmd):
         self.fd.write((cmd+'\r').encode("utf-8"))
-        print("SendCMD:" + cmd)
-        time.sleep(2)
+        #print("SendCMD:" + cmd)
         response = self.fd.read_all().__str__()
         return response
 
@@ -72,5 +71,5 @@ class SerialConnection(object):
     
 if __name__ == '__main__':
     fd = SerialConnection()
-    cmd = 'pdax:pval? 480 270'
+    cmd = 'fmtl?'
     print (fd.send_cmd_ar(cmd))

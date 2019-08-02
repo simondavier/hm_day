@@ -189,7 +189,7 @@ class TelnetApp(object):
         parse to get the current friendlyname
         '''
         xx = sInput.splitlines(False)
-        print xx
+        print (xx)
         out=''
         try:
             out=xx[2].split('location:')[1].split('new')[0].strip()
@@ -206,7 +206,7 @@ class TelnetApp(object):
         DNS #2:    8.8.8.8
         '''
         xx = sInput.splitlines(False)
-        print xx
+        print (xx)
         out=[]
         for i in xx:
             temp = i.split('DNS #1:')
@@ -215,7 +215,7 @@ class TelnetApp(object):
                 out.append(temp[1].strip())
             elif len(temp1)>=2:
                 out.append(temp1[1].strip())
-        print out
+        print (out)
         return out
         
          

@@ -1,76 +1,43 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-'''
-Created on Jul 3, 2018
-@author: WiShen
-'''
-
-#import os
-#import sys
 import logging
-import time
+from logging import handlers
 
-sLevelDft = "Warning"   #default log level is warning
-sToFileDft = "False"    #default is NOT write to file just console only
-sFormat = "%(asctime)s [%(levelname)s] %(filename)s(%(lineno)d): %(message)s"
-sFile = "./Logs/AutoTest_" + time.strftime("%Y%m%d_%H%M%S") + ".log"
-handler = None
-prt = None
+class Logger(object):
+    level_relations = {
+        'debug':logging.DEBUG,
+        'info':logging.INFO,
+        'warning':logging.WARNING,
+        'error':logging.ERROR,
+        'crit':logging.CRITICAL
+    }#level map
 
-def initLogger():
-    '''
-    initiate the logger object, it's mandatory
-    '''
-    global sFormat, sLevelDft, prt
-    logging.basicConfig(format = sFormat)
-    prt = logging.getLogger()
-    prt.setLevel(sLevelDft.upper())
-
-def cfgLevel(sLevel):
-    '''
-    Log level from low to high(case insensitive):  \n
-    debug, info, warning, error, critical
-    '''
-    global sLevelDft, prt
-    try:
-        prt.setLevel(sLevel.upper())
-        try:
-            handler.setLevel(sLevel.upper())
-        except: pass
-        sLevelDft = sLevel
-    except:
-        prt.warning("Log level " + sLevel + " is wrong!")
-        pass
-        
-def cfgToFile(sToFile):
-    '''
-    Configure the log if write to file \n
-    True: write to file \n
-    False: never write to file, console print only \n
-    '''
-    global sFormat, sFile, handler, prt
-    if sToFile.upper() == "TRUE":
-        handler = logging.FileHandler(sFile)
-        handler.setFormatter(logging.Formatter(sFormat))
-        prt.addHandler(handler)
-    
-'''
-def debug(sMsg):
-    prt.debug(sMsg)
-
-def info(sMsg):
-    prt.info(sMsg)
-
-def warning(sMsg):
-    prt.warning(sMsg)
-
-def error(sMsg):
-    prt.error(sMsg)
-
-def critical(sMsg):
-    return prt.critical(sMsg)
-'''
-
-#print os.path.basename(__file__)
-#print os.path.basename(sys.argv[0])
+    #def __init__(self,filename,level=logging.DEBUG,when='D',backCount=1,fmt='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s'):
+    def __init__(self,filename,level='info',when='D',backCount=1,fmt='[%(asctime)s]:%(levelname)s:%(message)s'):
+        self.logger = logging.getLogger(filename)
+        format_str = logging.Formatter(fmt)#设置日志格式
+        self.logger.setLevel(self.level_relations.get(level))#设置日志级别
+        #self.logger.setLevel(level)#设置日志级别
+        #sh = logging.StreamHandler()#往屏幕上输出
+        #sh.setFormatter(format_str) #设置屏幕上显示的格式
+        th = handlers.TimedRotatingFileHandler(filename=filename,when=when,backupCount=backCount,encoding='utf-8')#往文件里写入#指定间隔时间自动生成文件的处理器
+        #实例化TimedRotatingFileHandler
+        #interval是时间间隔，backupCount是备份文件的个数，如果超过这个个数，就会自动删除，when是间隔的时间单位，单位有以下几种：
+        # S 秒
+        # M 分
+        # H 小时、
+        # D 天、
+        # W 每星期（interval==0时代表星期一）
+        # midnight 每天凌晨
+        th.setFormatter(format_str)#设置文件里写入的格式
+        #self.logger.addHandler(sh) #把对象加到logger里
+        self.logger.addHandler(th)
+if __name__ == '__main__':
+    log = Logger('all.log',level='debug')
+    log.logger.debug('debug')
+    log.logger.info('info')
+    log.logger.warning('警告')
+    log.logger.error('报错')
+    log.logger.critical('严重')
+    Logger('error.log', level='error').logger.error('error')
 

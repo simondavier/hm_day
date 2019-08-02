@@ -661,7 +661,7 @@ class Quantum780Operation(object):
         Specifies the number of frames to capture during the Frame Compare test.
         :return:
         """
-        self.sc.send_cmd('PDAX:FRMS '+num.__str__())
+        self.sc.send_cmd('PDAX:FRMS '+str(num))
 
     def init_compare_frame(self):
         """
@@ -677,7 +677,8 @@ class Quantum780Operation(object):
         Get the number of pixel errors that occured during the comparison
         :return:
         """
-        self.sc.send_cmd('PDAX:ERRQ?')
+        return self.sc.send_cmd('PDAX:ERRQ?')
+
 
     def query_pixelErrCount(self, number):
         """
@@ -701,9 +702,10 @@ class Quantum780Operation(object):
         :param y: y coordinate
         :return: a color list with Hex
         """
-        res = self.sc.send_cmd_ar('PDAX:PVAL? '+str(x)+' '+str(y))
+        #res = self.sc.send_cmd_ar('PDAX:PVAL?'+x+' '+y)
+        res = self.sc.send_cmd_ar('PDAX:PVAL? '+x+' '+y)
         print(res)
-        return re.findall(r"0x[\w]+", res)
+        return str(re.findall(r"0x[\w]+", res))
 
 
     def write_edid_block(self, block, edid):
@@ -797,7 +799,23 @@ if __name__ == '__main__':
     qdcon = Quantum780Operation()
     #print(qdcon.generator_timing_dump())
     #print(qdcon.get_version())
-    qdcon.init_capture()
-    print(qdcon.get_pixel(480,270))
+    #qdcon.init_capture()
     #print(qdcon.alyz_timing_dump())
-    #print(qdcon.query_pixelErrCount(100))
+    res= qdcon.query_pixelErrCount(100)
+    if res:
+        print("pass")
+    else:
+        print("fail")
+    print(qdcon.get_pixel('479','540'))
+    # srccolor = "['0xFF', '0xFF', '0xFF']"
+    # descolor = "['0xFA', '0xFA', '0xFA']"
+    # srclist = re.findall(r"0x\w+", srccolor)
+    # deslist = re.findall(r"0x\w+", descolor)
+    # for i in range(len(srclist)):
+    #     srclist[i]=int(srclist[i],16)
+    #     deslist[i]=int(deslist[i],16)
+    # for i in range(len(srclist)):
+    #     if abs(srclist[i]-deslist[i])<=2:
+    #         print("pass")
+    #     else:
+    #         print("fail")

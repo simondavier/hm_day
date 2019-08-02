@@ -15,13 +15,15 @@ def get_serial_name():
             s_port=list(plist[i])
             str1 =''.join(list(plist[i]))
             if "Prolific USB-to-Serial Comm Port (" in str1:
+            #if "COM1" in str1:
                 sName = s_port[0]
+                print(sName)
                 return sName
 
 def open_serial_port(sName):
     try:
         serialFd = serial.Serial(sName,115200,timeout = 1)
-    except Exception, e:
+    except Exception as e:
         raise RuntimeError("Can not connect the serial!")
     return serialFd
 
@@ -39,10 +41,10 @@ if __name__ == '__main__':
     sName = get_serial_name()
     fd = open_serial_port(sName)
     cmd = 'fmtl?'
-    print send_cmd(fd, cmd)
+    print (send_cmd(fd, cmd))
         
     cmd = 'ifau'
-    print send_cmd(fd, cmd)
+    print (send_cmd(fd, cmd))
     
     cmd = 'ifad? 82'
-    print send_cmd(fd, cmd)
+    print (send_cmd(fd, cmd))
