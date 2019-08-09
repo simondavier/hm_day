@@ -6,9 +6,6 @@ import re,time
 import logging as log
 log.basicConfig(level=log.DEBUG,format="[%(asctime)s]%(name)s:%(levelname)s:%(message)s")
 
-#TESTPARAS = ['HRES', 'VRES', 'VRAT', 'VIC', 'AR', 'SCAN', 'HTOT',
-#                 'HSPD', 'HSPW', 'HSPP', 'VTOT', 'VSPD', 'VSPW', 'VSPP']
-
 class Quantum780Operation(object):
     def __init__(self):
         self.sc = serial.SerialConnection()
@@ -702,7 +699,6 @@ class Quantum780Operation(object):
         :param y: y coordinate
         :return: a color list with Hex
         """
-        #res = self.sc.send_cmd_ar('PDAX:PVAL?'+x+' '+y)
         res = self.sc.send_cmd_ar('PDAX:PVAL? '+x+' '+y)
         print(res)
         return str(re.findall(r"0x[\w]+", res))
@@ -806,7 +802,7 @@ if __name__ == '__main__':
         print("pass")
     else:
         print("fail")
-    print(qdcon.get_pixel('479','540'))
+    print(qdcon.get_pixel('480','285'))
     # srccolor = "['0xFF', '0xFF', '0xFF']"
     # descolor = "['0xFA', '0xFA', '0xFA']"
     # srclist = re.findall(r"0x\w+", srccolor)

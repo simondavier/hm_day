@@ -9,6 +9,7 @@ import quantum780_operation as qdoperation
 import switchconfig_operation as switchconfig
 import telnet_operation as telnet
 import logger as log
+import terminalcolor as tcolor
 from optparse import OptionParser
 #log.disable(log.logger.info) #disable log
 
@@ -50,7 +51,7 @@ def execute_test(cmdoptions, cmdargs):
     outport = config_d['SutDPS'].split(":")[1]
     #Test Step:
     #Ignore HDMI proctocal test parametres;
-    if cmdoptions.ignore:
+    if cmdoptions.ignore != "None":
         qd.TESTPARAS.remove(cmdoptions.ignore)
         swcregconf.TESTPARAS.remove(cmdoptions.ignore)
     #Initialize QD generator, default:1080p
@@ -70,7 +71,6 @@ def execute_test(cmdoptions, cmdargs):
     # Set Switch output
     switchport = "".join(re.findall(r"\d", outporttype))
     cmd_sw = ''.join('ci' + switchport + 'oall')
-    print("11111111111===="+cmd_sw)
     tn.send_thor_cmd(config_d['SutDPS'], cmd_dut)
     tn.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
     log.logger.info("Hey,Testing Start......")
@@ -388,52 +388,114 @@ def checkPattern(qd, qdincode, qdoutcode, incode, outcode, aspectratio, incolor,
     expect_output = outcode
     if 'stretch' == aspectratio:
         #check outcode
-        h= expect_output['HRES'] #output hres
-        v= expect_output['VRES'] #output vres
-        print(expect_input['VRES'])
-        print(expect_input['VRAT'])
-        print(expect_output['VRES'])
-        print(expect_output['VRAT'])
+        h= int(expect_output['HRES']) #output hres
+        v= int(expect_output['VRES']) #output vres
         #if 4K, 4K capture was not support by 780E
-        print("h is :"+str(h))
-        print("v is :" + str(v))
         if '2160p50' in qdincode or '2160p60' in qdincode:
             if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
                 log.logger.info("Both In/Out are 4K")
-                desarea = calculateBox(1, 1, qd, h, v, incolor, outcolor, swcolorconfig)
-                log.logger.info("The dest area is:")
-                log.logger.info(desarea)
+                desarea = calculateBox(1, 1, qd, h, v, h, v, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is: %s" %desarea)
                 if compareArea(1, h, v, desarea):
                     return True
                 else:return False
             else:
                 log.logger.info("In is 4K, Out not 4K")
-                desarea = calculateBox(1, 0, qd, h, v, incolor, outcolor, swcolorconfig)
+                desarea = calculateBox(1, 0, qd, h, v, h,v, incolor, outcolor, swcolorconfig)
                 log.logger.info("The dest area is:")
                 log.logger.info(desarea)
                 if compareArea(0, h, v, desarea):
+                    tcolor.cprint('Pattern Test was Pass','GREEN')
                     return True
-                else:return False
+                else:
+                    tcolor.cprint('Pattern Test was Fail', 'RED')
+                    return False
         else:
             if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
                 log.logger.info("In not 4K, Out is 4K")
-                desarea = calculateBox(0, 1, qd, h, v, incolor, outcolor, swcolorconfig)
+                desarea = calculateBox(0, 1, qd, h, v, h ,v, incolor, outcolor, swcolorconfig)
                 log.logger.info("The dest area is:")
                 log.logger.info(desarea)
                 if compareArea(1, h, v, desarea):
+                    tcolor.cprint('Pattern Test was Pass', 'GREEN')
                     return True
-                else:return False
+                else:
+                    tcolor.cprint('Pattern Test was Fail', 'RED')
+                    return False
             else:
                 log.logger.info("Both are not 4K")
-                desarea = calculateBox(0, 0, qd, h, v, incolor, outcolor, swcolorconfig)
+                desarea = calculateBox(0, 0, qd, h, v, h, v, incolor, outcolor, swcolorconfig)
                 log.logger.info("The dest area is:")
                 log.logger.info(desarea)
                 if compareArea(0, h, v, desarea):
+                    tcolor.cprint('Pattern Test was Pass', 'GREEN')
+                    return True
+                else:
+                    tcolor.cprint('Pattern Test was Fail', 'RED')
+                    return False
+    elif 'maintain' == aspectratio:
+        print("in maintain")
+        #Get scale fators
+        h1 = int(expect_input['HRES'])
+        v1 = int(expect_input['VRES'])
+        h2 = int(expect_output['HRES'])
+        v2 = int(expect_output['VRES'])
+        print(h1)
+        print(v1)
+        print(h2)
+        print(v2)
+        hsf = float("%.3f" % float(h2/h1))
+        print(hsf)
+        vsf = float("%.3f" % float(v2/v1))
+        print(vsf)
+        sf = min(hsf, vsf)
+        print(sf)
+        h3 = round(sf*h1)
+        print("The Horizontal line is %d" % h3)
+        v3 = round(sf*v1)
+        print("The Vertical line is %d" % v3)
+        if '2160p50' in qdincode or '2160p60' in qdincode:
+            if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
+                log.logger.info("Both In/Out are 4K")
+                desarea = calculateBox(1, 1, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is: %s" %desarea)
+                if compareArea(1, h3, v3, desarea):
                     return True
                 else:return False
-    elif 'maintain' == aspectratio:
-        #to do sth
-        pass
+            else:
+                log.logger.info("In is 4K, Out not 4K")
+                desarea = calculateBox(1, 0, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(0, h3, v3, desarea):
+                    tcolor.cprint('Pattern Test was Pass','GREEN')
+                    return True
+                else:
+                    tcolor.cprint('Pattern Test was Fail', 'RED')
+                    return False
+        else:
+            if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
+                log.logger.info("In not 4K, Out is 4K")
+                desarea = calculateBox(0, 1, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(1, h3, v3, desarea):
+                    tcolor.cprint('Pattern Test was Pass', 'GREEN')
+                    return True
+                else:
+                    tcolor.cprint('Pattern Test was Fail', 'RED')
+                    return False
+            else:
+                log.logger.info("Both are not 4K")
+                desarea = calculateBox(0, 0, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig)
+                log.logger.info("The dest area is:")
+                log.logger.info(desarea)
+                if compareArea(0, h3, v3, desarea):
+                    tcolor.cprint('Pattern Test was Pass', 'GREEN')
+                    return True
+                else:
+                    tcolor.cprint('Pattern Test was Fail', 'RED')
+                    return False
     else:
         raise ("Unsupport aspectration was set.")
 
@@ -444,22 +506,21 @@ def compareArea(outflag, h, v, desarea):
     :param v: src hight
     :return:boolean
     """
-    x = int(h)
-    y = int(v)
+    x = h
+    y = v
     # this "if" according to 780E can not support 4K capture
     if outflag:
         x = round(x/2)
         y = round(y/2)
     srcarea = round((y*x)/4)
-    print("The source area is:%s" % str(srcarea))
+    log.logger.info("The destiny is:%s" % str(desarea))
+    log.logger.info("The source  is:%s" % str(srcarea))
     factor = ("%.2f" % float(srcarea/desarea))
-    print("The factor is :"+ str(factor))
+    log.logger.info("The factor is :"+ factor)
     #compare black box
-    if factor == "1.00" or factor == "0.99":
-        print("the 2 area is equal!")
+    if factor == "1.01" or factor == "1.00" or factor == "0.99":
         return True
     else:
-        print("2 area is not equal!")
         return False
 
 
@@ -478,7 +539,6 @@ def getExpectColor(swcolorconfig, inflag, outflag, incolor, outcolor):
 def compColor(expcolor, pcolor):
     """
     Compare 2 Hex str color
-    "[0xFF, 0xFF, 0xFF]"
     :param expcolor:
     :param pcolor:
     :return: boolean
@@ -488,90 +548,109 @@ def compColor(expcolor, pcolor):
     for i in range(len(pcolor)):
         pcolor[i]=int(pcolor[i],16)
         expcolor[i]=int(expcolor[i],16)
-    print(expcolor)
-    print(pcolor)
     for i in range(len(pcolor)):
         if abs(pcolor[i]-expcolor[i])<=2:
             return True
         else:return False
 
-
-def calculateBox(inflag, outflag, qd, h, v, incolor, outcolor, swcolorconfig):
+def calculateBox(inflag, outflag, qd, h1, v1, h2, v2, incolor, outcolor, swcolorconfig):
     """
     Calculate black/white points of the pattern.
     :param inflag: if 4K, flag =1;
     :param outflag: if 4K, flag =1;
     :param qd;
-    :param h;
-    :param v;
+    :param h1;
+    :param v1;
+    :param h2;
+    :param v2;
     :param incolor;
     :param outcolor;
     :param swcolorconfig;
     :return: black box area;
     """
-    x = int(h)
-    y = int(v)
+    x = h1
+    y = v1
+    width = h2
+    hight = v2
+    offset = 20 #pixel detect offset
     # this "if" according to 780E can not support 4K capture
     if outflag:
         x = round(x/2)
-        #y = round(y/2)
-
+        y = round(y/2)
+        width = round(width/2)
+        hight = round(hight/2)
     #get the expect color
     expcolor = getExpectColor(swcolorconfig, inflag, outflag, incolor, outcolor)
-    #print("The expect color is :"+expcolor)
     #init pixel analyzer
-    print(qd.get_format())
     qd.init_capture()
     qd.cap_frame(100)
     qd.init_compare_frame()
     qd.query_pixelErrCount(100)
     #get the ynorth
     xcenter = round(x/2)
-    ycenter=round((y/4)+10)
-    while ycenter > 0:
+    ycenter=round(y/2)-round(hight/4)+offset/2
+    limit = ycenter-offset
+    log.logger.info("finding ynorth...")
+    while ycenter > limit:
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
-        print("The pixel color is %s"% pcolor)
-        print("The expet color is %s"% expcolor)
         if compColor(expcolor, pcolor):
-           ynorth = ycenter
-           break
-        else:
-            print("not equal!")
+            ynorth = ycenter
+            break
         ycenter=ycenter-1
+    else:
+        ynorth = 0
+        log.logger.info("ynorth can not find!")
+    log.logger.info("ynorth is %s" % ynorth)
     #get the ysouth
     xcenter = round(x/2)
-    ycenter=round((y/4)*3-10)
-    while ycenter < y:
+    #ycenter=round((y/4)*3-10)
+    ycenter=round(y/2)+round(hight/4)-offset/2
+    limit = ycenter+offset
+    log.logger.info("finding ysouth...")
+    while ycenter < limit: #10 pixel offset
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
-        print(pcolor)
         if compColor(expcolor, pcolor):
             ysouth = ycenter
             break
         ycenter=ycenter+1
+    else:
+        ysouth = y
+        log.logger.info("ysouth can not find!")
+    log.logger.info("ysouth is %s" % ysouth)
     #get the xwest
-    xcenter=round((x/4)+10)
+    #xcenter=round((x/4)+10)
+    xcenter=round(x/2)-round(width/4)+offset/2
     ycenter = round(y/2)
-    while xcenter > 0:
+    limit = xcenter-offset
+    log.logger.info("finding xwest...")
+    while xcenter > limit:
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
-        print(pcolor)
         if compColor(expcolor, pcolor):
             xwest = xcenter
             break
         xcenter=xcenter-1
+    else:
+        xwest = 0
+        log.logger.info("xwest can not find!")
+    log.logger.info("xwest is %s" % xwest)
     #get the xeast
-    xcenter=round((x/4)*3-10)
+    #xcenter=round((x/4)*3-10)
+    xcenter=round(x/2)+round(width/4)-offset/2
     ycenter = round(y/2)
-    while xcenter < x:
+    limit = xcenter+offset
+    log.logger.info("finding xeast...")
+    while xcenter < limit:
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
-        print(pcolor)
         if compColor(expcolor, pcolor):
             xeast = xcenter
             break
         xcenter=xcenter+1
+    else:
+        xeast = x
+        log.logger.info("xeast can not find!")
+    log.logger.info("xeast is %s" % xeast)
     hight = ysouth - ynorth
     width = xeast - xwest
-    print("the black box hight is:"+str(hight))
-    print("the black box width is:"+str(width))
     return hight*width
 
 def randSwitchPort(rand, inportdic, outportdic):
@@ -690,7 +769,7 @@ def main():
     parser.add_option("--skip", dest="skip", type="string", help=\
                                                             "Skip HDMI Protocal/Pattern Test .[ protocal | pattern ]")
     parser.add_option("--outcolor", dest="outcolorspace", type="string", default="RGB",help=\
-                                                            "Set Quantum colorspace.[ RGB | YCbCr444]\
+                                                            "Set DUT colorspace.[ RGB | YCbCr444]\
                                                             defalut:RGB")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
     options, args = parser.parse_args()
