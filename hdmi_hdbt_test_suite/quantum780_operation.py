@@ -193,14 +193,15 @@ class Quantum780Operation(object):
         """
         return self.sc.send_cmd('DVST?')
 
-    def hdcp_alyzSwitch(self, opt='2'):
+    def hdcp_alyzSwitch(self, opt):
         """
         CPAG
         Enable/Disable hdcp analyzer(Rx port)
+        Set RX
         :param opt:
         0 = disable;
-        1 = enable;
-        2 = auto;
+        1 = 1.4;
+        2 = 2.2;
         :return:
         """
         self.sc.send_cmd('DIDU')
@@ -215,7 +216,7 @@ class Quantum780Operation(object):
         2 = hdcp2.x
         :return:
         """
-        self.sc.send_cmd('DIDU')
+        self.sc.send_cmd('HDCP 0')
         if '0'== opt:
             self.sc.send_cmd('HDCP '+opt)
         elif '1' == opt:
@@ -551,9 +552,9 @@ class Quantum780Operation(object):
     def generator_timing_dump(self):
         """
         generator_timing_dump
-        Dump all TMAX commands result
+        Dump all generator commands result
         :return:
-        A dic of all TMAX commands result
+        A dic of all generator commands result
         """
         for item in self.TESTPARAS:
             if item == 'VRAT':
@@ -588,7 +589,7 @@ class Quantum780Operation(object):
         alyz_timing_dump
         Dump all Generator timing result
         :return:
-        A dic of all Generator result
+        A dic of all TMAX analyzer result
         """
         time.sleep(10)
         self.read_infoframes()
@@ -667,6 +668,7 @@ class Quantum780Operation(object):
         :return:
         """
         self.sc.send_cmd('PDAU')
+        time.sleep(7)
 
     def get_errCount(self):
         """
@@ -700,7 +702,6 @@ class Quantum780Operation(object):
         :return: a color list with Hex
         """
         res = self.sc.send_cmd_ar('PDAX:PVAL? '+x+' '+y)
-        print(res)
         return str(re.findall(r"0x[\w]+", res))
 
 
@@ -778,7 +779,7 @@ class Quantum780Operation(object):
         if "" == hdcp:
             pass
         else:
-            self.hdcp_alyzSwitch()
+            #self.hdcp_alyzSwitch()
             if 'None' == hdcp:
                 self.hdcp_generator('0')
             elif '14' == hdcp:
@@ -798,20 +799,9 @@ if __name__ == '__main__':
     #qdcon.init_capture()
     #print(qdcon.alyz_timing_dump())
     res= qdcon.query_pixelErrCount(100)
-    if res:
+    if '0' == res:
         print("pass")
     else:
         print("fail")
-    print(qdcon.get_pixel('480','285'))
-    # srccolor = "['0xFF', '0xFF', '0xFF']"
-    # descolor = "['0xFA', '0xFA', '0xFA']"
-    # srclist = re.findall(r"0x\w+", srccolor)
-    # deslist = re.findall(r"0x\w+", descolor)
-    # for i in range(len(srclist)):
-    #     srclist[i]=int(srclist[i],16)
-    #     deslist[i]=int(deslist[i],16)
-    # for i in range(len(srclist)):
-    #     if abs(srclist[i]-deslist[i])<=2:
-    #         print("pass")
-    #     else:
-    #         print("fail")
+    #print(qdcon.get_errCount())
+    print(qdcon.get_pixel('200','200'))
