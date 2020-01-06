@@ -14,11 +14,12 @@ failnumber = 0
 def main():
     global  passnumber, failnumber
     #select case;
-    #basedir = (os.path.dirname(os.path.abspath(__file__)))
-    basedir = "C:\\Simon\\CrickTest"
+    basedir = (os.path.dirname(os.path.abspath(__file__)))
+    #basedir = "C:\\Simon\\BannekerTest"
     filename = basedir+"\\TestCaseManagement.xlsx"
     sw= switchconfig.SwitchConfigOperation(filename, 0)
     result = sw.getSupportTimingCode(4)
+    caselines = sw.getTestCaseRowNumber(4)
 
     #handle history logfile, first copy , then delete
     os.system('del ' + basedir + "\\Report.xml " + r"/Q")
@@ -34,13 +35,26 @@ def main():
     duration = calduration(time1, time2)
     #get the case result;
     tmplog = basedir+"\\log\\"+"tmp.log"
-    for line in open(tmplog, 'r'):
-        #print(line)
+    for index, line in enumerate(open(tmplog, 'r')):
         dicres = loads(line)
         if dicres['failnumber'] >= 1:
+            #write the result back to excel;
+            sw.setCellValue(caselines[index],6,"FAIL")
+            sw.saveModify(filename)
+        else:
+            #write the result back to excel;
+            sw.setCellValue(caselines[index],6,"PASS")
+            sw.saveModify(filename)
+    #compare result
+    expectRes=sw.getTestResult(5)
+    dectetRes=sw.getTestResult(6)
+    for i in range(len(expectRes)):
+        if expectRes[i]!=dectetRes[i]:
+            #print("Test Failed!")
             failnumber+=1
         else:
             passnumber+=1
+
     #create report
     totalnumber = sw.getRowsLenth()-1
     notrunnumber = totalnumber-passnumber-failnumber

@@ -93,7 +93,7 @@ class Quantum780Operation(object):
             self.sc.send_cmd('XVAI 3')
         else:
             raise("Unknown input signal！")
-        self.sc.send_cmd('ALLU')
+        #self.sc.send_cmd('ALLU')
 
     def get_input_signal(self):
         """
@@ -204,7 +204,8 @@ class Quantum780Operation(object):
         2 = 2.2;
         :return:
         """
-        self.sc.send_cmd('DIDU')
+        #self.sc.send_cmd('DIDU')
+        #time.sleep(5)
         self.sc.send_cmd('CPAG '+opt)
 
     def hdcp_generator(self, opt):
@@ -226,6 +227,58 @@ class Quantum780Operation(object):
         else:
             raise ("Unknown hdcp parameters.")
 
+    # def queryTX_hdcp(self, hdcpout):
+    #     """
+    #     Check Tx hdcp status, if off, then on
+    #     :param opt:
+    #     :return:
+    #     """
+    #     queryTX = self.get_tx_hdcp()
+    #     print("Query TX hdcp disable(0) is %s, Quantum send is %s"%(queryTX,hdcpout))
+    #     if "0" == queryTX:
+    #         if "None" ==  hdcpout:
+    #             self.sc.send_cmd('HDCP 0')
+    #         elif "14" == hdcpout:
+    #             self.sc.send_cmd('HDCP 1')
+    #         elif "220" == hdcpout:
+    #             self.sc.send_cmd('HDCP 2')
+    #             self.sc.send_cmd('HSTG 0')
+    #         elif "221" == hdcpout:
+    #             self.sc.send_cmd('HDCP 2')
+    #             self.sc.send_cmd('HSTG 1')
+    #         else:
+    #             raise ("Unknown hdcp parameters.")
+    def queryTX_hdcp(self, hdcpout):
+        """
+        Check Tx hdcp status, if off, then on
+        :param opt:
+        :return:
+        """
+        queryTX = self.get_tx_hdcp()
+        print("Query TX hdcp disable(0) is %s, Quantum send is %s"%(queryTX,hdcpout))
+        while "0" == self.get_tx_hdcp():
+            print("The hdcp will set to enable!")
+            if "None" ==  hdcpout:
+                self.sc.send_cmd('HDCP 0')
+                break
+            elif "14" == hdcpout:
+                self.sc.send_cmd('HDCP 0')
+                self.sc.send_cmd('HDCP 1')
+                time.sleep(5)
+            elif "220" == hdcpout:
+                self.sc.send_cmd('HDCP 0')
+                self.sc.send_cmd('HDCP 2')
+                self.sc.send_cmd('HSTG 0')
+                time.sleep(5)
+            elif "221" == hdcpout:
+                self.sc.send_cmd('HDCP 0')
+                self.sc.send_cmd('HDCP 2')
+                self.sc.send_cmd('HSTG 1')
+                time.sleep(5)
+        else:
+            print("HDCP has been enabled now!")
+
+
     def hdcp_analyzer(self):
         """
         HDCP?
@@ -241,6 +294,13 @@ class Quantum780Operation(object):
             return True
         else:
             return False
+
+    def get_tx_hdcp(self):
+        """
+        Get Quantum output hdcp status
+        :return: 0 off, not 0 on
+        """
+        return self.sc.send_cmd('CPGG?')
 
     def load_testpattern(self, name):
         """
@@ -702,6 +762,7 @@ class Quantum780Operation(object):
         :return: a color list with Hex
         """
         res = self.sc.send_cmd_ar('PDAX:PVAL? '+x+' '+y)
+        print(res)
         return str(re.findall(r"0x[\w]+", res))
 
 
@@ -729,7 +790,7 @@ class Quantum780Operation(object):
         :param colorspace: set color space;
         :param bit:  set color bitrate;
         :param outport: set output HDMI/HDBASET;
-        :param hdcp: set hdcp;
+        :param hdcp: set hdcp; None,14,220,221
         :return:
         """
         #set QD output timing
@@ -784,8 +845,12 @@ class Quantum780Operation(object):
                 self.hdcp_generator('0')
             elif '14' == hdcp:
                 self.hdcp_generator('1')
-            elif '22' == hdcp:
+            elif '220' == hdcp: #type0
                 self.hdcp_generator('2')
+                self.sc.send_cmd('HSTG 0')
+            elif '221' == hdcp: #type1
+                self.hdcp_generator('2')
+                self.sc.send_cmd('HSTG 1')
             else:raise ("Unknow hdcp key!")
 
     def close(self):
@@ -794,14 +859,15 @@ class Quantum780Operation(object):
 
 if __name__ == '__main__':
     qdcon = Quantum780Operation()
-    #print(qdcon.generator_timing_dump())
-    #print(qdcon.get_version())
-    #qdcon.init_capture()
-    #print(qdcon.alyz_timing_dump())
+#     #print(qdcon.generator_timing_dump())
+#     #print(qdcon.get_version())
+#     #qdcon.init_capture()
+#     #print(qdcon.alyz_timing_dump())
     res= qdcon.query_pixelErrCount(100)
+    print(res)
     if '0' == res:
         print("pass")
     else:
         print("fail")
     #print(qdcon.get_errCount())
-    print(qdcon.get_pixel('200','200'))
+    print(qdcon.get_pixel('480','271'))

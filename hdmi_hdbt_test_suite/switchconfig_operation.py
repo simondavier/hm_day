@@ -86,7 +86,31 @@ class SwitchConfigOperation(object):
         for i in range(1, self.getRowsLenth()+1):
             if 'x' == self.getCellValue(i, column):
                 result.append(self.getCellValue(i,3))
-        return  result
+        return result
+
+    def getTestCaseRowNumber(self, column):
+        """
+        Return a list of all checked test case;
+        :param column:
+        :return:
+        """
+        result = []
+        for i in range(2, self.getRowsLenth()+1):
+            if 'x' == self.getCellValue(i, column):
+                result.append(i)
+        return result
+
+    def getTestResult(self, column):
+        """
+        Return a list of all test expect or detect
+        :param column:
+        :return:
+        """
+        result = []
+        for i in range(2, self.getRowsLenth()+1):
+            if 'x' == self.getCellValue(i, 4):
+                result.append(self.getCellValue(i,column))
+        return result
 
     def getTimingExpect(self, qdcode):
         """
@@ -216,13 +240,14 @@ class SwitchConfigOperation(object):
                 raise("There is empty value config in file")
         return config
 
-    def getExpectPixelColor(self, inflag, outflag, incolor, outcolor):
+    def getExpectPixelColor(self, inflag, outflag, incolor, outcolor, colume):
         """
         Get expect pixel color of white
         :param inflag: 4k=1, non4k=0
         :param outflag: 4k=1, non4k=0
         :param incolor:
         :param outcolor:
+        :param colume: 7=white, 8=red, 9=green, 10=blue
         :return:
         """
         for i in range(1, self.getRowsLenth() + 1):
@@ -232,76 +257,76 @@ class SwitchConfigOperation(object):
                         if outcolor == 'RGB':#1,1,'RGB','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,1,'RGB','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr444':
                         if outcolor == 'RGB':#1,1,'YCbCr444','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,1,'YCbCr444','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr422':
                         if outcolor == 'RGB':#1,1,'YCbCr422','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,1,'YCbCr422','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr420':
                         if outcolor == 'RGB':#1,1,'YCbCr420','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,1,'YCbCr420','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     else:raise ("Unknown colorspace")
                 elif not outflag:
                     if incolor =='RGB':
                         if outcolor == 'RGB':#1,0,'RGB','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,0,'RGB','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr444':
                         if outcolor == 'RGB':#1,0,'YCbCr444','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,0,'YCbCr444','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr422':
                         if outcolor == 'RGB':#1,0,'YCbCr422','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,0,'YCbCr422','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr420':
                         if outcolor == 'RGB':#1,0,'YCbCr420','RGB'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,0,'YCbCr420','YCbCr444'
                             if self.getCellValue(i,1)=='x' and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     else:raise ("Unknown colorspace")
             elif not inflag:
                 if outflag:
@@ -309,76 +334,76 @@ class SwitchConfigOperation(object):
                         if outcolor == 'RGB':#0,1,'RGB','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,1,'RGB','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr444':
                         if outcolor == 'RGB':#0,1,'YCbCr444','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,1,'YCbCr444','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr422':
                         if outcolor == 'RGB':#0,1,'YCbCr422','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #1,1,'YCbCr422','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr420':
                         if outcolor == 'RGB':#0,1,'YCbCr420','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,1,'YCbCr420','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)=='x' and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     else:raise ("Unknown colorspace")
                 elif not outflag:
                     if incolor =='RGB':
                         if outcolor == 'RGB':#0,0,'RGB','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,0,'RGB','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr444':
                         if outcolor == 'RGB':#0,0,'YCbCr444','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,0,'YCbCr444','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr422':
                         if outcolor == 'RGB':#0,0,'YCbCr422','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,0,'YCbCr422','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     elif incolor == 'YCbCr420':
                         if outcolor == 'RGB':#0,0,'YCbCr420','RGB'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                         else:               #0,0,'YCbCr420','YCbCr444'
                             if self.getCellValue(i,1)==None and self.getCellValue(i,3)==None and self.getCellValue(i,2)==incolor \
                                 and self.getCellValue(i,4)==outcolor:
-                                return self.getCellValue(i, 7)
+                                return self.getCellValue(i, colume)
                     else:raise ("Unknown colorspace")
 
 if __name__ == '__main__':
@@ -402,7 +427,7 @@ if __name__ == '__main__':
     #    print (code)
     #timing = sco.getSupportTimingList(37)
     #black, white = sco.getPixelColor('YCbCr444', 1)
-    print("white is:"+sco.getPixelColor(0,0,'YCbCr420','YCbCr444'))
+    print("white is:"+sco.getExpectPixelColor(0,0,'YCbCr420','YCbCr444', 8))
     #print(sco.getCellValue(2,1))
         #print(sco.getTimingExpect(code))
     #print(sco.getEdid('1080p60','0'))
