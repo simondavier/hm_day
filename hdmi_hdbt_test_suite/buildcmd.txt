@@ -1,0 +1,1 @@
+pyinstaller -F VideoTestSuite.py -i python.ico
