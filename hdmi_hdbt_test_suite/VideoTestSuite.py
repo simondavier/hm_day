@@ -24,8 +24,72 @@ INFCOUNT = 0 #count input protocal fail number
 OUTFCOUNT = 0 #count output protocal fail number
 PATPCOUNT = 0 #count output pattern pass number
 PATFCOUNT = 0 #count output pattern fail number
-logname = BASEDIR+"\\log\\" + time.strftime("%Y%m%d_%H%M%S") + ".log"
-log = log.Logger(logname)
+args = ''
+loggy = ''
+#logname = BASEDIR+"\\log\\" + time.strftime("%Y%m%d_%H%M%S") + "_case_"+"_".join(args)+".log"
+#log = log.Logger(logname)
+
+def main():
+    """
+    :return:
+    """
+    usage = "usage: %prog [options] args"
+    parser = OptionParser(usage)
+    parser.add_option("-p", dest="patternname", default="Halation", type="string", help="Set Quantum test pattern.\
+                                                                                        default:halation")
+    parser.add_option("-t", dest="timing", type="string", default="1080p60",help=\
+                                                            "Set input timing[qdcode | all | random]\
+                                                            default: 1080p60\
+                                                            all: all input timing\
+                                                            random: random input timing \
+                                                            qdcode: the manual timing,eg,2160p30")
+
+    parser.add_option("-s", dest="scaletiming", type="string", default="auto",help=\
+                                                            "Set scale output timing.[qdcode | auto | bypass | random | manual ].\
+                                                            defalut:auto\
+                                                            bypass: bypass\
+                                                            auto: all support scale timing\
+                                                            random: random output timing\
+                                                            manual: manual output timing\
+                                                            qdcode: the manual scale timing, eg, 2160p60")
+    parser.add_option("-c", dest="colorspace", type="string", default="YCbCr444",help=\
+                                                            "Set Quantum colorspace.[ RGB | YCbCr444 | YCbCr422 | YCbCr420]\
+                                                            defalut:RGB")
+    parser.add_option("-d", dest="deepcolor", type="string", default="8",help="Set Quantum deepcolor.[8 | 10 | 12]")
+    parser.add_option("-r", dest="repetitions", type="string", default="1",help="Set the test loop repetitions")
+    parser.add_option("-i", dest="interval", type="string", default="1",help="Set DUT switch time interval(Uint:second)")
+    parser.add_option("--hdcpout", dest="hdcpout", type="string", default="None",help="Set Quantum out HDCP.[None | 14 | 220 | 221]")
+    parser.add_option("--hdcpin", dest="hdcpin", type="string", default="None",help="Set Quantum in HDCP.[None | 14 | 22 ]")
+    parser.add_option("--hdcpdut", dest="hdcpdut", type="string", default="auto",help="Set DUT HDCP out.[None | 14 | 22 | auto]")
+    parser.add_option("--ignore", dest="ignore", type="string", default="None",help="Ignore specified HDMI protocal para, eg:VIC, AR,...")
+    parser.add_option("--outport", dest="outport", type="string", default='HDMI', \
+                                                             help="Set Quantum Device output port.[HDMI | HDBT]")
+    parser.add_option("--inport", dest="inport", type="string", default='HDMI', \
+                                                             help="Set Quantum Device input port.[HDMI | HDBT]")
+    parser.add_option("--random", dest="random", type="string",help=\
+                                                            "Random Switch Input/Output ports.[ input | output | all ]")
+    parser.add_option("--ar", dest="aspectratio", type="string", default ="stretch", help=\
+                                                            "Set DUT AspectRatio, default is stretch .[ maintain | stretch ]")
+    parser.add_option("--skip", dest="skip", type="string", help=\
+                                                            "Skip HDMI Protocal/Pattern Test .[ protocal | pattern ]")
+    parser.add_option("--outcolor", dest="outcolorspace", type="string", default="RGB",help=\
+                                                            "Set DUT colorspace.[ RGB | YCbCr444]\
+                                                            defalut:RGB")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
+    global options, args, loggy
+    options, args = parser.parse_args()
+    #logname = BASEDIR + "\\log\\" + time.strftime("%Y%m%d_%H%M%S") + "_case_" + "_".join(args) +".log"
+    logname = BASEDIR + "\\log\\" + "case_" + "_".join(args) +".log"
+    loggy = log.Logger(logname)
+    #if not args:
+        #parser.print_help()
+        #exit(1)
+    duration, starttime, endtime, totalnumber, passnumber, failnumber, notrunnumber = executeTest(options, args)
+    resdic={"passnumber":passnumber, "failnumber":failnumber, "notrunnumber":notrunnumber,"duration":"".join(duration),"casenum":"".join(args)}
+    #resdic={"passnumber":10, "failnumber":20, "notrunnumber":0}
+    tmpfile = BASEDIR+"\\log\\tmp.log"
+    writeTempFile(tmpfile, resdic)
+
 
 def executeTest(cmdoptions, cmdargs):
     """
@@ -41,20 +105,20 @@ def executeTest(cmdoptions, cmdargs):
     time1 = datetime.now()
     #Get config vars from the data sheet:
     config_d = switchconfig.SwitchConfigOperation(SWITCHCONFIG, 1).load_config()
-    log.logger.info(config_d)
+    loggy.logger.info(config_d)
     filename = BASEDIR+"\\"+config_d['ConfigFilePath']
     edidfile = BASEDIR+"\\"+config_d['EdidFilePath']
-    log.logger.info(cmdoptions)
+    loggy.logger.info(cmdoptions)
     tn = telnet.TelnetApp(config_d['MasterIP'],config_d['MasterUsername'],config_d['MasterPassword'])
-    log.logger.info("switch_ip:"+config_d['SwitchIP']+"switch_username:"+config_d['SwitchUsername']+"Switch_pwd:" \
+    loggy.logger.info("switch_ip:"+config_d['SwitchIP']+"switch_username:"+config_d['SwitchUsername']+"Switch_pwd:" \
               +config_d['SwitchPassword'])
     swcregconf = switchconfig.SwitchConfigOperation(filename, 0)
     swcolorconfig = switchconfig.SwitchConfigOperation(filename, 2)
     qd = qdoperation.Quantum780Operation()
     inportdic = initPort(config_d['InputPortType'])
-    log.logger.info("The input port type is:%s."% inportdic)
+    loggy.logger.info("The input port type is:%s."% inportdic)
     outportdic = initPort(config_d['OutputPortType'])
-    log.logger.info("The output port type is:%s."% outportdic)
+    loggy.logger.info("The output port type is:%s."% outportdic)
     repetitions = int(cmdoptions.repetitions)
     ar = cmdoptions.aspectratio
     incolor = cmdoptions.colorspace
@@ -74,7 +138,7 @@ def executeTest(cmdoptions, cmdargs):
         qd.TESTPARAS.remove(cmdoptions.ignore)
         swcregconf.TESTPARAS.remove(cmdoptions.ignore)
     #Initialize QD generator, default:1080p
-    log.logger.info("Start initialize Quantum Data!")
+    loggy.logger.info("Start initialize Quantum Data!")
     qd.sent_qd_generator('1080p60', cmdoptions.patternname, \
                          cmdoptions.colorspace, \
                          cmdoptions.deepcolor, \
@@ -83,7 +147,7 @@ def executeTest(cmdoptions, cmdargs):
     qd.switch_hpformats('0') #disable hotplug formats
     qd.apply_edid()
     #Initialize SUT default input and output
-    log.logger.info("Start initialize DUT in/out port!")
+    loggy.logger.info("Start initialize DUT in/out port!")
     inport = inportdic['HDMI1']
     inporttype = 'HDMI1'
     outport = outportdic['HDMI1']
@@ -94,13 +158,13 @@ def executeTest(cmdoptions, cmdargs):
     cmd_sw = ''.join('ci' + switchport + 'oall')
     tn.send_thor_cmd(config_d['SutDPS'], cmd_dut)
     tn.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
-    # Initial RX HDCP to follow
-    tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-FOLLOW')
-    log.logger.info("Hey,Testing Start......")
+    # Initial RX HDCP to auto
+    tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-AUTO')
+    loggy.logger.info("Hey,Testing Start......")
     # Execute repetions
     while(repetitions):
         for qdcode in getTimingList(swcregconf, cmdoptions.timing, 37):
-            log.logger.info("The current input timing is %s" % qdcode)
+            loggy.logger.info("The current input timing is %s" % qdcode)
             # Get the input code to get h,v
             incode= swcregconf.getTimingExpect(qdcode)
             #Set input timing
@@ -118,58 +182,58 @@ def executeTest(cmdoptions, cmdargs):
             if cmdoptions.random != None:
                 time.sleep(int(cmdoptions.interval))
                 cmd_dut,cmd_sw, outport, outporttype, inporttype = randSwitchPort(cmdoptions.random, inportdic, outportdic)
-                log.logger.info("The input port is %s" % inporttype)
-                log.logger.info("The output port is %s" % outporttype)
+                loggy.logger.info("The input port is %s" % inporttype)
+                loggy.logger.info("The output port is %s" % outporttype)
                 #Check if input port support HDBT Big 4K
                 if isHdbtSupport(cmdoptions, qdcode, inporttype):
                     pass
                 else:
                     continue
                 #input support
-                log.logger.info("Switch the DUT port is: %s" % cmd_dut)
+                loggy.logger.info("Switch the DUT port is: %s" % cmd_dut)
                 tn.send_thor_cmd(config_d['SutDPS'], cmd_dut)
-                log.logger.info("Switch the Switch port is: %s" % cmd_sw)
+                loggy.logger.info("Switch the Switch port is: %s" % cmd_sw)
                 tn.send_thor_cmd(config_d['SwitchDPS'], cmd_sw)
-            # Config hdcp, if duthdcp was not follow, then execute hdcpdut, or hdcpin
-            if hdcpdut != 'follow':
-                log.logger.info("Set The DUT HDCP to %s" % hdcpdut)
+            # Config hdcp, if duthdcp was not auto, then execute hdcpdut, or hdcpin
+            if hdcpdut != 'auto':
+                loggy.logger.info("Set The DUT HDCP to %s" % hdcpdut)
                 if 'None' == hdcpdut:
                     configHDCPRx(qd, hdcpin)
-                    log.logger.info("Set The DUT HDCP to %s success!" % hdcpdut)
+                    loggy.logger.info("Set The DUT HDCP to %s success!" % hdcpdut)
                     tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-NO HDCP')
                     #configHDCPTx(qd,hdcpout)
                     qd.queryTX_hdcp(hdcpout)
                 elif '14' == hdcpdut:
                     configHDCPRx(qd, hdcpin)
-                    log.logger.info("Set The DUT HDCP to %s success!" % hdcpdut)
+                    loggy.logger.info("Set The DUT HDCP to %s success!" % hdcpdut)
                     tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-HDCP1.4')
                     #configHDCPTx(qd, hdcpout)
                     qd.queryTX_hdcp(hdcpout)
                 elif '22' == hdcpdut:
                     configHDCPRx(qd, hdcpin)
-                    log.logger.info("Set The DUT HDCP to %s success!" % hdcpdut)
+                    loggy.logger.info("Set The DUT HDCP to %s success!" % hdcpdut)
                     tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-HDCP2.2')
                     #configHDCPTx(qd, hdcpout)
                     qd.queryTX_hdcp(hdcpout)
                 else:
                     raise ("Unknow hdcp ICSP command parameters!")
             else:
-                log.logger.info("DUT will set to follow,Set The DUT HDCP to %s" % hdcpdut)
-                tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-FOLLOW')
+                loggy.logger.info("DUT will set to auto,Set The DUT HDCP to %s" % hdcpdut)
+                tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_HDCP-AUTO')
                 configHDCPRx(qd, hdcpin)
                 #configHDCPTx(qd,hdcpout)
                 qd.queryTX_hdcp(hdcpout)
             #If bypass, Yes:dectected；Not:set output timing
             if 'bypass' == cmdoptions.scaletiming:
-                log.logger.info("The bypass scaler mode is %s" % cmdoptions.scaletiming)
+                loggy.logger.info("The bypass scaler mode is %s" % cmdoptions.scaletiming)
                 #Set DUT output: bypass；Set port to output
                 if cmdoptions.random != 'None':
                     newdps = config_d['SutDPS'].replace(":1:",":"+outport+":")
-                    log.logger.info("The new SUT DPS is %s" % newdps)
+                    loggy.logger.info("The new SUT DPS is %s" % newdps)
                     tn.send_thor_cmd(newdps,'VIDOUT_SCALE-BYPASS')
                 else:tn.send_thor_cmd(config_d['SutDPS'], 'VIDOUT_SCALE-BYPASS')
                 #Set QD input port
-                log.logger.info("Set QD analyze port!")
+                loggy.logger.info("Set QD analyze port!")
                 setQdInputport(qd, outporttype)
                 # qd.queryTX_hdcp(opt_hdcp)
                 configHDCPTx(qd, hdcpout)
@@ -189,15 +253,15 @@ def executeTest(cmdoptions, cmdargs):
                 #         pixelcount = qd.query_pixelErrCount(100)
                 #         if '0' == pixelcount:
                 #             PATPCOUNT = PATPCOUNT + 1
-                #             log.logger.info("Bypass no pixel error, PASS")
+                #             loggy.logger.info("Bypass no pixel error, PASS")
                 #             tcolor.cprint("Bypass Test PASS", 'GREEN')
                 #         else:
                 #             PATFCOUNT = PATFCOUNT + 1
-                #             log.logger.info("Bypass has %s pixel error, FAIL" % pixelcount)
+                #             loggy.logger.info("Bypass has %s pixel error, FAIL" % pixelcount)
                 #             tcolor.cprint("Bypass Test FAIL", 'RED')
                 #     else:
                 #         PATPCOUNT = PATPCOUNT + 1
-                #         log.logger.info("Bypass no pixel error, PASS")
+                #         loggy.logger.info("Bypass no pixel error, PASS")
                 #         tcolor.cprint("Bypass Test PASS", 'GREEN')
                 # elif 'pattern' == cmdoptions.skip:
                 #     #Check the output
@@ -215,18 +279,19 @@ def executeTest(cmdoptions, cmdargs):
                 #         pixelcount = qd.query_pixelErrCount(100)
                 #         if '0' == pixelcount:
                 #             PATPCOUNT = PATPCOUNT + 1
-                #             log.logger.info("Bypass no pixel error, PASS")
+                #             loggy.logger.info("Bypass no pixel error, PASS")
                 #             tcolor.cprint("Bypass Test PASS", 'GREEN')
                 #         else:
                 #             PATFCOUNT = PATFCOUNT + 1
-                #             log.logger.info("Bypass has %s pixel error, FAIL" % pixelcount)
+                #             loggy.logger.info("Bypass has %s pixel error, FAIL" % pixelcount)
                 #             tcolor.cprint("Bypass Test FAIL", 'RED')
                 #     else:
                 #         PATPCOUNT = PATPCOUNT + 1
-                #         log.logger.info("Bypass no pixel error, PASS")
+                #         loggy.logger.info("Bypass no pixel error, PASS")
                 #         tcolor.cprint("Bypass Test PASS", 'GREEN')
                 # if output skip protocal test
                 scalercode = qdcode
+                outcolor = incolor
                 outcode = swcregconf.getTimingExpect(scalercode)
                 if 'protocal' == cmdoptions.skip:
                     # check pattern
@@ -256,18 +321,18 @@ def executeTest(cmdoptions, cmdargs):
                     else:
                         PATFCOUNT = PATFCOUNT + 1
             elif 'auto'== cmdoptions.scaletiming: #or 'random'==cmdoptions.scaletiming:
-                log.logger.info("The auto scaler mode is %s" % cmdoptions.scaletiming)
+                loggy.logger.info("The auto scaler mode is %s" % cmdoptions.scaletiming)
                 for scalercode in getTimingList(swcregconf, cmdoptions.scaletiming, 38):
                     #HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
                     if isHdbtSupport(cmdoptions, scalercode, outporttype):
                         pass
                     else:
                         continue
-                    log.logger.info("Set Scaler Out timing to %s!" % scalercode)
+                    loggy.logger.info("Set Scaler Out timing to %s!" % scalercode)
                     # set scaler to auto
                     if cmdoptions.random != 'None':
                         newdps = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
-                        log.logger.info("The new SUT DPS is %s" % newdps)
+                        loggy.logger.info("The new SUT DPS is %s" % newdps)
                         tn.send_thor_cmd(newdps, 'vidout_scale-auto')
                     else:
                         newdps = config_d['SutDPS']
@@ -275,15 +340,15 @@ def executeTest(cmdoptions, cmdargs):
                     #"for"  set aspect Ratio
                     arcmd='vidout_aspect_ratio-'+ar
                     tn.send_thor_cmd(newdps, arcmd)
-                    log.logger.info("Set aspectratio to %s !" % ar)
+                    loggy.logger.info("Set aspectratio to %s !" % ar)
                     #set output colorspace
                     cscmd = 'vidout_color_space-'+outputcolor
                     tn.send_thor_cmd(newdps, cscmd)
-                    log.logger.info("Set output colorspace to %s !" % outcolor)
+                    loggy.logger.info("Set output colorspace to %s !" % outcolor)
                     #get the output timing code to get h,v;
                     outcode = swcregconf.getTimingExpect(scalercode)
                     # set qd input port
-                    log.logger.info("Set QD analyze port!")
+                    loggy.logger.info("Set QD analyze port!")
                     setQdInputport(qd, outporttype)
                     # write edid
                     writeEdid(swcregconf, scalercode, edidfile, qd)
@@ -320,7 +385,7 @@ def executeTest(cmdoptions, cmdargs):
                             PATPCOUNT=PATPCOUNT+1
                         else:PATFCOUNT=PATFCOUNT+1
             else:
-                log.logger.info("The manual scaler mode is %s" % cmdoptions.scaletiming)
+                loggy.logger.info("The manual scaler mode is %s" % cmdoptions.scaletiming)
                 #scalercode = cmdoptions.scaletiming
                 for scalercode in getTimingList(swcregconf, cmdoptions.scaletiming, 38):
                     # HDBT can not support 4096x2160@50/60 YCbCr/RGB input or output
@@ -328,12 +393,12 @@ def executeTest(cmdoptions, cmdargs):
                         pass
                     else:
                         continue
-                    log.logger.info("Set Scaler Out timing to %s!" % scalercode)
+                    loggy.logger.info("Set Scaler Out timing to %s!" % scalercode)
                     # set scaler to manual
                     if cmdoptions.random != 'None':
                         #config_d['SutDPS'] = config_d['SutDPS'].replace(":1:", ":" + outport + ":") need know why not?
                         newdps = config_d['SutDPS'].replace(":1:", ":" + outport + ":")
-                        log.logger.info("The new SUT DPS is %s" % newdps)
+                        loggy.logger.info("The new SUT DPS is %s" % newdps)
                         #tn.send_thor_cmd(config_d['SutDPS'], 'vidout_scale-manual')
                         tn.send_thor_cmd(newdps, 'vidout_scale-manual')
                     else:
@@ -342,18 +407,18 @@ def executeTest(cmdoptions, cmdargs):
                     #"for"  set aspect Ratio
                     arcmd='vidout_aspect_ratio-'+ar
                     tn.send_thor_cmd(newdps, arcmd)
-                    log.logger.info("Set aspectratio to %s !" % ar)
+                    loggy.logger.info("Set aspectratio to %s !" % ar)
                     #set output colorspac
                     cscmd = 'vidout_color_space-'+outputcolor
                     tn.send_thor_cmd(newdps, cscmd)
-                    log.logger.info("Set output colorspace to %s !" % outcolor)
+                    loggy.logger.info("Set output colorspace to %s !" % outcolor)
                     # set scaler output timing
                     outcode = swcregconf.getTimingExpect(scalercode)
                     #write edid to sink
                     #writeEdid(swcregconf, scalercode, edidfile, qd)
                     #VIDOUT_RES_REF
                     cmd=''.join('VIDOUT_RES_REF-'+outcode['HRES']+'x'+outcode['VRES']+','+str(round(float(outcode['VRAT']))))
-                    log.logger.info("The manual scaler timing out is %s" % cmd)
+                    loggy.logger.info("The manual scaler timing out is %s" % cmd)
                     tn.send_thor_cmd(newdps, cmd)
                     time.sleep(10)
                     print("The second set scaler out@@")
@@ -362,7 +427,7 @@ def executeTest(cmdoptions, cmdargs):
                     # Check TX hdcp status
                     qd.queryTX_hdcp(hdcpout)
                     #Set QD input port
-                    log.logger.info("Set QD analyze port!")
+                    loggy.logger.info("Set QD analyze port!")
                     setQdInputport(qd, outporttype)
                     # if output skip protocal test
                     if 'protocal' == cmdoptions.skip:
@@ -392,9 +457,9 @@ def executeTest(cmdoptions, cmdargs):
                         else:PATFCOUNT=PATFCOUNT+1
         repetitions = repetitions-1
     #Calculate all test result
-    log.logger.info("OK,All Test Completed! Total: %d "%(INPCOUNT+INFCOUNT+OUTPCOUNT+OUTFCOUNT+PATPCOUNT+PATFCOUNT)+" cases, %d"\
+    loggy.logger.info("OK,All Test Completed! Total: %d "%(INPCOUNT+INFCOUNT+OUTPCOUNT+OUTFCOUNT+PATPCOUNT+PATFCOUNT)+" cases, %d"\
                     %(INPCOUNT+OUTPCOUNT+PATPCOUNT)+" is PASS, %d" %(INFCOUNT+OUTFCOUNT+PATFCOUNT)+" is FAIL!")
-    log.logger.info("INPUT Timing RESULT:%d"%(INPCOUNT)+" is PASS, %d"%(INFCOUNT)+" is FAIL. "\
+    loggy.logger.info("INPUT Timing RESULT:%d"%(INPCOUNT)+" is PASS, %d"%(INFCOUNT)+" is FAIL. "\
                     "OUTPUT Timing RESULT: %d"%(OUTPCOUNT)+" is PASS, %d"%(OUTFCOUNT)+" is FAIL."\
                     "PATTERN TEST RESULT: %d"%(PATPCOUNT)+" is PASS, %d"%(PATFCOUNT)+" is FAIL.")
     endtime = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
@@ -424,7 +489,7 @@ def isHdbtSupport(cmdoptions, qdcode, porttype):
     if 'HDBT' in porttype:
         if qdcode == '2160p50w' or qdcode == '2160p60w':
             if cmdoptions.colorspace == 'RGB' or cmdoptions.colorspace == 'YCbCr444':
-                log.logger.info("HDBT "+porttype+" can not support 4096x2160@50/60,RGB/YCbCr444!!!")
+                loggy.logger.info("HDBT "+porttype+" can not support 4096x2160@50/60,RGB/YCbCr444!!!")
                 return False
     return True
 
@@ -435,9 +500,9 @@ def configHDCPRx(qd, hdcpin):
     :param hdcpin:
     :return:
     """
-    #if hdcpin !='follow':
+    #if hdcpin !='auto':
     print("hdcp in is %s", hdcpin)
-    log.logger.info("Set Quantum HDCP IN %s" % hdcpin)
+    loggy.logger.info("Set Quantum HDCP IN %s" % hdcpin)
     if 'None' == hdcpin:
         qd.hdcp_alyzSwitch('0')
     elif '14' == hdcpin:
@@ -454,8 +519,8 @@ def configHDCPTx(qd, hdcpout):
     :param hdcpout:
     :return:
     """
-    #if hdcpin !='follow':
-    log.logger.info("Set Quantum HDCP OUT %s" % hdcpout)
+    #if hdcpin !='auto':
+    loggy.logger.info("Set Quantum HDCP OUT %s" % hdcpout)
     if 'None' == hdcpout:
         qd.hdcp_generator('0')
     elif '14' == hdcpout:
@@ -508,17 +573,17 @@ def checkTiming(qd, qdcode, swcregconf, inout):
             expect_ioput['HSPD'] = str(int(expect_ioput['HSPD'])//2)
             expect_ioput['HSPW'] = str(int(expect_ioput['HSPW'])//2)
             expect_ioput['VTOT'] = str(int(expect_ioput['VTOT'])*2)
-        #log.logger.info("Get Expected Timing Result!")
+        #loggy.logger.info("Get Expected Timing Result!")
         detect_input = qd.generator_timing_dump()
-        log.logger.info("=The %s Expected Para are:=" % inout)
-        log.logger.info(expect_ioput)
+        loggy.logger.info("=The %s Expected Para are:=" % inout)
+        loggy.logger.info(expect_ioput)
         print("==Input Timing is: " + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput[
             'VRAT'] + "==")
         print("===================================")
         result = swcregconf.compare_result(expect_ioput, detect_input)
         print("Input Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
               % result)
-        log.logger.info(
+        loggy.logger.info(
             "Input Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
             % result)
         # if 'PASS'==result:
@@ -527,15 +592,15 @@ def checkTiming(qd, qdcode, swcregconf, inout):
     elif('output'==inout):
         #expect_output = swcregconf.getTimingExpect(qdcode)
         detect_output = qd.alyz_timing_dump()
-        log.logger.info("=The %s Expected Para are:=" % inout)
-        log.logger.info(expect_ioput)
+        loggy.logger.info("=The %s Expected Para are:=" % inout)
+        loggy.logger.info(expect_ioput)
         print("==Output Timing is: " + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput[
             'VRAT'] + "==")
         print("=====================================")
         result = swcregconf.compare_result(expect_ioput, detect_output)
         print("Output Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
               % result)
-        log.logger.info(
+        loggy.logger.info(
             "Output Timing" + expect_ioput['HRES'] + "x" + expect_ioput['VRES'] + "@" + expect_ioput['VRAT'] + " test is %s" \
             % result)
     else:raise ("Wrong I/O, function only support 'input' or 'output', please check! ")
@@ -563,53 +628,53 @@ def checkPattern(qd, qdincode, qdoutcode, incode, outcode, aspectratio, incolor,
         #if 4K, 4K capture was not support by 780E
         if '2160p50' in qdincode or '2160p60' in qdincode:
             if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
-                log.logger.info("Both In/Out are 4K")
+                loggy.logger.info("Both In/Out are 4K")
                 desarea = calculateBox(1, 1, qd, h, v, h, v, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" %desarea)
+                loggy.logger.info("The dest area is: %s" %desarea)
                 if compareArea(1, h, v, desarea):
                     tcolor.cprint('Pattern Test was PASS', 'GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
             else:
-                log.logger.info("In is 4K, Out not 4K")
+                loggy.logger.info("In is 4K, Out not 4K")
                 desarea = calculateBox(1, 0, qd, h, v, h,v, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" % desarea)
+                loggy.logger.info("The dest area is: %s" % desarea)
                 if compareArea(0, h, v, desarea):
                     tcolor.cprint('Pattern Test was PASS','GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
         else:
             if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
-                log.logger.info("In not 4K, Out is 4K")
+                loggy.logger.info("In not 4K, Out is 4K")
                 desarea = calculateBox(0, 1, qd, h, v, h ,v, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" % desarea)
+                loggy.logger.info("The dest area is: %s" % desarea)
                 if compareArea(1, h, v, desarea):
                     tcolor.cprint('Pattern Test was PASS', 'GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
             else:
-                log.logger.info("Both are not 4K")
+                loggy.logger.info("Both are not 4K")
                 desarea = calculateBox(0, 0, qd, h, v, h, v, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" % desarea)
+                loggy.logger.info("The dest area is: %s" % desarea)
                 if compareArea(0, h, v, desarea):
                     tcolor.cprint('Pattern Test was Pass', 'GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
     elif 'maintain' == aspectratio:
         print("in maintain")
@@ -622,58 +687,58 @@ def checkPattern(qd, qdincode, qdoutcode, incode, outcode, aspectratio, incolor,
         vsf = float("%.3f" % float(v2/v1))
         sf = min(hsf, vsf)
         h3 = round(sf*h1)
-        log.logger.info("The Horizontal line is %d" % h3)
+        loggy.logger.info("The Horizontal line is %d" % h3)
         v3 = round(sf*v1)
-        log.logger.info("The Vertical line is %d" % v3)
+        loggy.logger.info("The Vertical line is %d" % v3)
         if '2160p50' in qdincode or '2160p60' in qdincode:
             if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
-                log.logger.info("Both In/Out are 4K")
+                loggy.logger.info("Both In/Out are 4K")
                 desarea = calculateBox(1, 1, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig, column)
-                log.logger.info("The dest area is: %s" %desarea)
+                loggy.logger.info("The dest area is: %s" %desarea)
                 if compareArea(1, h3, v3, desarea):
                     tcolor.cprint('Pattern Test was Pass', 'GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
             else:
-                log.logger.info("In is 4K, Out not 4K")
+                loggy.logger.info("In is 4K, Out not 4K")
                 desarea = calculateBox(1, 0, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" % desarea)
+                loggy.logger.info("The dest area is: %s" % desarea)
                 if compareArea(0, h3, v3, desarea):
                     tcolor.cprint('Pattern Test was PASS','GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
         else:
             if '2160p50' in qdoutcode or '2160p60' in qdoutcode:
-                log.logger.info("In not 4K, Out is 4K")
+                loggy.logger.info("In not 4K, Out is 4K")
                 desarea = calculateBox(0, 1, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" % desarea)
+                loggy.logger.info("The dest area is: %s" % desarea)
                 if compareArea(1, h3, v3, desarea):
                     tcolor.cprint('Pattern Test was PASS', 'GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
             else:
-                log.logger.info("Both are not 4K")
+                loggy.logger.info("Both are not 4K")
                 desarea = calculateBox(0, 0, qd, h2, v2, h3, v3, incolor, outcolor, swcolorconfig,column)
-                log.logger.info("The dest area is: %s" % desarea)
+                loggy.logger.info("The dest area is: %s" % desarea)
                 if compareArea(0, h3, v3, desarea):
                     tcolor.cprint('Pattern Test was PASS', 'GREEN')
-                    log.logger.info("Pattern Test was PASS!")
+                    loggy.logger.info("Pattern Test was PASS!")
                     return True
                 else:
                     tcolor.cprint('Pattern Test was FAIL', 'RED')
-                    log.logger.info("Pattern Test was FAIL!")
+                    loggy.logger.info("Pattern Test was FAIL!")
                     return False
     else:
         raise ("Unsupport aspectration was set.")
@@ -692,10 +757,10 @@ def compareArea(outflag, h, v, desarea):
         x = round(x/2)
         y = round(y/2)
     srcarea = round((y*x)/4)
-    log.logger.info("The destiny is:%s" % str(desarea))
-    log.logger.info("The source  is:%s" % str(srcarea))
+    loggy.logger.info("The destiny is:%s" % str(desarea))
+    loggy.logger.info("The source  is:%s" % str(srcarea))
     factor = ("%.2f" % float(srcarea/desarea))
-    log.logger.info("The factor is :"+ factor)
+    loggy.logger.info("The factor is :"+ factor)
     #compare black box
     accpetence = ["0.95","0.96","0.97","0.98","0.99","1.00","1.01","1.02","1.03","1.04","1.05","1.06"]
     if factor in accpetence:
@@ -723,7 +788,7 @@ def compColor(expcolor, pcolor):
     :param pcolor:
     :return: boolean
     """
-    print('expcolor is %s'%expcolor)
+    #print('expcolor is %s'%expcolor)
     expcolor = re.findall(r"0x\w+", expcolor)
     pcolor = re.findall(r"0x\w+", pcolor)
     if len(pcolor)>1:
@@ -774,7 +839,7 @@ def calculateBox(inflag, outflag, qd, h1, v1, h2, v2, incolor, outcolor, swcolor
     xcenter = round(x/2)
     ycenter = int(round(y/2)-round(hight/4)+offset/2)
     limit = ycenter-offset
-    log.logger.info("finding ynorth...")
+    loggy.logger.info("finding ynorth...")
     #print(expcolor)
     while ycenter > limit:
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
@@ -790,13 +855,13 @@ def calculateBox(inflag, outflag, qd, h1, v1, h2, v2, incolor, outcolor, swcolor
         ycenter=ycenter-1
     else:
         ynorth = 0
-        log.logger.info("ynorth can not find!")
-    log.logger.info("ynorth is %s" % ynorth)
+        loggy.logger.info("ynorth can not find!")
+    loggy.logger.info("ynorth is %s" % ynorth)
     #get the ysouth
     xcenter = round(x/2)
     ycenter = int(round(y/2)+round(hight/4)-offset/2)
     limit = ycenter+offset
-    log.logger.info("finding ysouth...")
+    loggy.logger.info("finding ysouth...")
     while ycenter < limit: #10 pixel offset
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
         if compColor(expcolor, pcolor):
@@ -810,13 +875,13 @@ def calculateBox(inflag, outflag, qd, h1, v1, h2, v2, incolor, outcolor, swcolor
         ycenter=ycenter+1
     else:
         ysouth = y
-        log.logger.info("ysouth can not find!")
-    log.logger.info("ysouth is %s" % ysouth)
+        loggy.logger.info("ysouth can not find!")
+    loggy.logger.info("ysouth is %s" % ysouth)
     #get the xwest
     xcenter = int(round(x/2)-round(width/4)+offset/2)
     ycenter = round(y/2)
     limit = xcenter-offset
-    log.logger.info("finding xwest...")
+    loggy.logger.info("finding xwest...")
     while xcenter > limit:
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
         if compColor(expcolor, pcolor):
@@ -830,13 +895,13 @@ def calculateBox(inflag, outflag, qd, h1, v1, h2, v2, incolor, outcolor, swcolor
         xcenter=xcenter-1
     else:
         xwest = 0
-        log.logger.info("xwest can not find!")
-    log.logger.info("xwest is %s" % xwest)
+        loggy.logger.info("xwest can not find!")
+    loggy.logger.info("xwest is %s" % xwest)
     #get the xeast
     xcenter = int(round(x/2)+round(width/4)-offset/2)
     ycenter = round(y/2)
     limit = xcenter+offset
-    log.logger.info("finding xeast...")
+    loggy.logger.info("finding xeast...")
     while xcenter < limit:
         pcolor = qd.get_pixel(str(xcenter), str(ycenter))
         if compColor(expcolor, pcolor):
@@ -850,8 +915,8 @@ def calculateBox(inflag, outflag, qd, h1, v1, h2, v2, incolor, outcolor, swcolor
         xcenter=xcenter+1
     else:
         xeast = x
-        log.logger.info("xeast can not find!")
-    log.logger.info("xeast is %s" % xeast)
+        loggy.logger.info("xeast can not find!")
+    loggy.logger.info("xeast is %s" % xeast)
     hight = ysouth - ynorth
     width = xeast - xwest
     return hight*width
@@ -872,42 +937,44 @@ def randSwitchPort(rand, inportdic, outportdic):
         outporttype = random.choice(list(outportdic.keys()))
         outport = outportdic[outporttype]
         cmd_dut = ''.join('ci' + inport + 'o' + outport)
-        log.logger.info("Set the DUT port is: %s" % cmd_dut)
+        loggy.logger.info("Set the DUT port is: %s" % cmd_dut)
         #Set Switch output
         switchport = "".join(re.findall(r"\d",outporttype))
         cmd_sw = ''.join('ci'+switchport+'oall')
-        #log.logger.info("Set the Switch port is: %s" % cmd_sw)
+        #loggy.logger.info("Set the Switch port is: %s" % cmd_sw)
     elif 'input' == rand:
         # Random switch SUT in port, output default is first port
         inporttype = random.choice(list(inportdic.keys()))
         inport = inportdic[inporttype]
         cmd_dut = ''.join('ci' + inport + 'o' + outportdic['HDMI1'])
-        log.logger.info("The DUT IN port is: %s" % inport)
+        loggy.logger.info("The DUT IN port is: %s" % inport)
         #No output switch
-        log.logger.info("OUTput has no change.")
+        loggy.logger.info("OUTput has no change.")
         # Set Switch output
         cmd_sw = ''
     elif 'output' == rand:
         #No switch SUT in port, input is the default
-        log.logger.info("INput has no change.")
+        loggy.logger.info("INput has no change.")
         outporttype = random.choice(list(outportdic.keys()))
         outport = outportdic[outporttype]
         cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outport)
-        log.logger.info("The DUT OUT port is: %s" % outport)
+        loggy.logger.info("The DUT OUT port is: %s" % outport)
         #Set Switch output
         switchport = "".join(re.findall(r"\d",outporttype))
-        cmd_sw = ''.join('ci'+switchport+'oall')
-        #log.logger.info("Set the Switch port is: %s" % cmd_sw)
+        #cmd_sw = ''.join('ci'+switchport+'oall')
+        cmd_sw = ''.join('ci'+switchport+'o1')
+        #loggy.logger.info("Set the Switch port is: %s" % cmd_sw)
     else:
         cmd_dut = ''.join('ci' + inportdic['HDMI1'] + 'o' + outportdic['HDMI1'])
         #Set Switch output
         switchport = "".join(re.findall(r"\d",'HDMI1'))
-        cmd_sw = ''.join('ci'+switchport+'oall')
+        #cmd_sw = ''.join('ci'+switchport+'oall')
+        cmd_sw = ''.join('ci'+switchport+'o1')
     return cmd_dut, cmd_sw, outport, outporttype, inporttype
 
 def writeEdid(swcregconf, scalercode, edidfile, qd):
     edid = swcregconf.qdcode2edid(scalercode)
-    log.logger.info("The new edid is:" + edid)
+    loggy.logger.info("The new edid is:" + edid)
     edidobj = switchconfig.SwitchConfigOperation(edidfile, 0)
     block0 = edidobj.getEdid(edid, '0')
     block1 = edidobj.getEdid(edid, '1')
@@ -944,62 +1011,62 @@ def writeTempFile(filename, resdic):
     with open(filename, 'a+') as f:
         f.write(resstr+'\n')
 
-def main():
-    """
-    :return:
-    """
-    usage = "usage: %prog [options] args"
-    parser = OptionParser(usage)
-    parser.add_option("-p", dest="patternname", default="Halation", type="string", help="Set Quantum test pattern.\
-                                                                                        default:halation")
-    parser.add_option("-t", dest="timing", type="string", default="1080p60",help=\
-                                                            "Set input timing[qdcode | all | random]\
-                                                            default: 1080p60\
-                                                            all: all input timing\
-                                                            random: random input timing \
-                                                            qdcode: the manual timing,eg,2160p30")
-
-    parser.add_option("-s", dest="scaletiming", type="string", default="auto",help=\
-                                                            "Set scale output timing.[qdcode | auto | bypass | random | manual ].\
-                                                            defalut:auto\
-                                                            bypass: bypass\
-                                                            auto: all support scale timing\
-                                                            random: random output timing\
-                                                            manual: manual output timing\
-                                                            qdcode: the manual scale timing, eg, 2160p60")
-    parser.add_option("-c", dest="colorspace", type="string", default="YCbCr444",help=\
-                                                            "Set Quantum colorspace.[ RGB | YCbCr444 | YCbCr422 | YCbCr420]\
-                                                            defalut:RGB")
-    parser.add_option("-d", dest="deepcolor", type="string", default="8",help="Set Quantum deepcolor.[8 | 10 | 12]")
-    parser.add_option("-r", dest="repetitions", type="string", default="1",help="Set the test loop repetitions")
-    parser.add_option("-i", dest="interval", type="string", default="1",help="Set DUT switch time interval(Uint:second)")
-    parser.add_option("--hdcpout", dest="hdcpout", type="string", default="None",help="Set Quantum out HDCP.[None | 14 | 220 | 221]")
-    parser.add_option("--hdcpin", dest="hdcpin", type="string", default="None",help="Set Quantum in HDCP.[None | 14 | 22 ]")
-    parser.add_option("--hdcpdut", dest="hdcpdut", type="string", default="follow",help="Set DUT HDCP out.[None | 14 | 22 | follow]")
-    parser.add_option("--ignore", dest="ignore", type="string", default="None",help="Ignore specified HDMI protocal para, eg:VIC, AR,...")
-    parser.add_option("--outport", dest="outport", type="string", default='HDMI', \
-                                                             help="Set Quantum Device output port.[HDMI | HDBT]")
-    parser.add_option("--inport", dest="inport", type="string", default='HDMI', \
-                                                             help="Set Quantum Device input port.[HDMI | HDBT]")
-    parser.add_option("--random", dest="random", type="string",help=\
-                                                            "Random Switch Input/Output ports.[ input | output | all ]")
-    parser.add_option("--ar", dest="aspectratio", type="string", default ="stretch", help=\
-                                                            "Set DUT AspectRatio, default is stretch .[ maintain | stretch ]")
-    parser.add_option("--skip", dest="skip", type="string", help=\
-                                                            "Skip HDMI Protocal/Pattern Test .[ protocal | pattern ]")
-    parser.add_option("--outcolor", dest="outcolorspace", type="string", default="RGB",help=\
-                                                            "Set DUT colorspace.[ RGB | YCbCr444]\
-                                                            defalut:RGB")
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
-    options, args = parser.parse_args()
-    #if not args:
-        #parser.print_help()
-        #exit(1)
-    duration, starttime, endtime, totalnumber, passnumber, failnumber, notrunnumber = executeTest(options, args)
-    resdic={"passnumber":passnumber, "failnumber":failnumber, "notrunnumber":notrunnumber}
-    #resdic={"passnumber":10, "failnumber":20, "notrunnumber":0}
-    tmpfile = BASEDIR+"\\log\\tmp.log"
-    writeTempFile(tmpfile, resdic)
+# #def main():
+#     """
+#     :return:
+#     """
+#     usage = "usage: %prog [options] args"
+#     parser = OptionParser(usage)
+#     parser.add_option("-p", dest="patternname", default="Halation", type="string", help="Set Quantum test pattern.\
+#                                                                                         default:halation")
+#     parser.add_option("-t", dest="timing", type="string", default="1080p60",help=\
+#                                                             "Set input timing[qdcode | all | random]\
+#                                                             default: 1080p60\
+#                                                             all: all input timing\
+#                                                             random: random input timing \
+#                                                             qdcode: the manual timing,eg,2160p30")
+#
+#     parser.add_option("-s", dest="scaletiming", type="string", default="auto",help=\
+#                                                             "Set scale output timing.[qdcode | auto | bypass | random | manual ].\
+#                                                             defalut:auto\
+#                                                             bypass: bypass\
+#                                                             auto: all support scale timing\
+#                                                             random: random output timing\
+#                                                             manual: manual output timing\
+#                                                             qdcode: the manual scale timing, eg, 2160p60")
+#     parser.add_option("-c", dest="colorspace", type="string", default="YCbCr444",help=\
+#                                                             "Set Quantum colorspace.[ RGB | YCbCr444 | YCbCr422 | YCbCr420]\
+#                                                             defalut:RGB")
+#     parser.add_option("-d", dest="deepcolor", type="string", default="8",help="Set Quantum deepcolor.[8 | 10 | 12]")
+#     parser.add_option("-r", dest="repetitions", type="string", default="1",help="Set the test loop repetitions")
+#     parser.add_option("-i", dest="interval", type="string", default="1",help="Set DUT switch time interval(Uint:second)")
+#     parser.add_option("--hdcpout", dest="hdcpout", type="string", default="None",help="Set Quantum out HDCP.[None | 14 | 220 | 221]")
+#     parser.add_option("--hdcpin", dest="hdcpin", type="string", default="None",help="Set Quantum in HDCP.[None | 14 | 22 ]")
+#     parser.add_option("--hdcpdut", dest="hdcpdut", type="string", default="auto",help="Set DUT HDCP out.[None | 14 | 22 | auto]")
+#     parser.add_option("--ignore", dest="ignore", type="string", default="None",help="Ignore specified HDMI protocal para, eg:VIC, AR,...")
+#     parser.add_option("--outport", dest="outport", type="string", default='HDMI', \
+#                                                              help="Set Quantum Device output port.[HDMI | HDBT]")
+#     parser.add_option("--inport", dest="inport", type="string", default='HDMI', \
+#                                                              help="Set Quantum Device input port.[HDMI | HDBT]")
+#     parser.add_option("--random", dest="random", type="string",help=\
+#                                                             "Random Switch Input/Output ports.[ input | output | all ]")
+#     parser.add_option("--ar", dest="aspectratio", type="string", default ="stretch", help=\
+#                                                             "Set DUT AspectRatio, default is stretch .[ maintain | stretch ]")
+#     parser.add_option("--skip", dest="skip", type="string", help=\
+#                                                             "Skip HDMI Protocal/Pattern Test .[ protocal | pattern ]")
+#     parser.add_option("--outcolor", dest="outcolorspace", type="string", default="RGB",help=\
+#                                                             "Set DUT colorspace.[ RGB | YCbCr444]\
+#                                                             defalut:RGB")
+#     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose out")
+#     options, args = parser.parse_args()
+#     #if not args:
+#         #parser.print_help()
+#         #exit(1)
+#     duration, starttime, endtime, totalnumber, passnumber, failnumber, notrunnumber = executeTest(options, args)
+#     resdic={"passnumber":passnumber, "failnumber":failnumber, "notrunnumber":notrunnumber}
+#     #resdic={"passnumber":10, "failnumber":20, "notrunnumber":0}
+#     tmpfile = BASEDIR+"\\log\\tmp.log"
+#     writeTempFile(tmpfile, resdic)
 
 if __name__=="__main__":
     main()

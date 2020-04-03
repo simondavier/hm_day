@@ -762,7 +762,7 @@ class Quantum780Operation(object):
         :return: a color list with Hex
         """
         res = self.sc.send_cmd_ar('PDAX:PVAL? '+x+' '+y)
-        print(res)
+        #print(res)
         return str(re.findall(r"0x[\w]+", res))
 
 
@@ -870,4 +870,4 @@ if __name__ == '__main__':
     else:
         print("fail")
     #print(qdcon.get_errCount())
-    print(qdcon.get_pixel('480','271'))
+    print(qdcon.get_pixel('960','275'))

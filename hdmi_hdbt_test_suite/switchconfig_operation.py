@@ -88,6 +88,22 @@ class SwitchConfigOperation(object):
                 result.append(self.getCellValue(i,3))
         return result
 
+    def getCaseInfo(self, column):
+        """
+        Return a list of all support input timing
+        :param column:
+        :return:
+        """
+        casecmd = []
+        casename = []
+        casenum = []
+        for i in range(1, self.getRowsLenth()+1):
+            if 'x' == self.getCellValue(i, column):
+                casecmd.append(self.getCellValue(i,3))
+                casename.append(self.getCellValue(i,2))
+                casenum.append(self.getCellValue(i,1))
+        return casecmd,casename,casenum
+
     def getTestCaseRowNumber(self, column):
         """
         Return a list of all checked test case;
